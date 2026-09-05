@@ -1,0 +1,295 @@
+@import "tailwindcss";
+
+/* ── Override Tailwind's font-sans to Inter everywhere ─────────────────── */
+@theme {
+  --font-sans: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Tamil', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', 'Consolas', monospace;
+}
+
+
+@layer base {
+  :root {
+    --color-gov-navy: #0B3D66;
+    --color-gov-navy-dark: #072742;
+    --color-gov-blue: #1D4ED8;
+    --color-gov-orange: #EA580C;
+    --color-gov-green: #059669;
+    --color-gov-red: #DC2626;
+    --color-gov-bg: #F8FAFC;
+    --color-gov-border: #E2E8F0;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    /* Slightly smaller base — Inter is a bit larger visually than Noto */
+    font-size: 14.5px;
+    line-height: 1.6;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    /* Inter first; regional scripts fall back gracefully to Noto Sans variants */
+    font-family: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Tamil', system-ui, -apple-system, sans-serif;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Headings: tighter tracking at larger sizes feels more editorial / handcrafted */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-optical-sizing: auto;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+  }
+
+  /* Inline code / mono stays distinct */
+  code, kbd, pre, .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', 'Consolas', monospace;
+    font-size: 0.88em;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Modern Gov-Tech Card Architecture (Stripe / Linear / Modern Gov Standard) */
+.gov-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.gov-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+.gov-card-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #F1F5F9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* High-Density Modern Government Data Tables */
+.gov-table-wrapper {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+
+.gov-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  text-align: left;
+}
+
+.gov-table th {
+  background-color: #F8FAFC;
+  color: #475569;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 11.5px;
+  /* Sentence case column headers — feels human, not template-generated */
+  text-transform: none;
+  letter-spacing: 0.01em;
+  padding: 12px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.gov-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid #F1F5F9;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.gov-table tr:last-child td {
+  border-bottom: none;
+}
+
+.gov-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.gov-table tbody tr:hover {
+  background-color: #F8FAFC;
+}
+
+/* Form Controls & Inputs */
+.gov-input, .gov-select {
+  height: 42px;
+  padding: 0 13px;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 7px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #0F172A;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gov-input::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.gov-input:focus, .gov-select:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+
+/* Modern Pill Badges — Inter, no uppercase, feels more human */
+.gov-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  /* purposely NOT uppercase — all-caps screams AI template */
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.gov-badge-success {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.gov-badge-warning {
+  background-color: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.gov-badge-critical {
+  background-color: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.gov-badge-info {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.gov-badge-neutral {
+  background-color: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+}
+
+/* Home Portal 8-Card Grid Reference Classes */
+.tn-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 420px;
+}
+
+.tn-card-header {
+  padding: 15px 20px;
+  color: #FFFFFF;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  /* 16px with tight tracking = readable but not billboard-loud */
+  font-size: 15.5px;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.tn-more-btn {
+  background-color: #3B1C54;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 22px;
+  border-radius: 6px;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  text-decoration: none;
+}
+.tn-more-btn:hover {
+  background-color: #260E3A;
+  transform: translateY(-1px);
+}
+
+/* High-Contrast 3D Glossy Bullets */
+.bullet-3d-blue {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #93C5FD 0%, #2563EB 55%, #1D4ED8 100%);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.35);
+  flex-shrink: 0;
+}
+
+.bullet-3d-green {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #6EE7B7 0%, #10B981 55%, #059669 100%);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.35);
+  flex-shrink: 0;
+}
+
+.bullet-3d-purple {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #D8B4FE 0%, #9333EA 55%, #7E22CE 100%);
+  box-shadow: 0 2px 4px rgba(147, 51, 234, 0.35);
+  flex-shrink: 0;
+}
+
+.bullet-3d-red {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FCA5A5 0%, #EF4444 55%, #DC2626 100%);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.35);
+  flex-shrink: 0;
+}
+
+.bullet-3d-orange {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #FCD34D 0%, #F59E0B 55%, #D97706 100%);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.35);
+  flex-shrink: 0;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
