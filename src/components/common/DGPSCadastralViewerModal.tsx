@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useRole } from '../../context/RoleContext';
 import { useModals } from '../../context/ModalContext';
 import {
   Compass,
@@ -14,15 +16,21 @@ import {
   Sparkles,
   ShieldCheck,
   FileCheck2,
+  ShieldAlert,
+  Lock,
 } from 'lucide-react';
 
 export const DGPSCadastralViewerModal: React.FC = () => {
   const { isModalOpen, closeModal } = useModals();
+  const { currentUser } = useRole();
+  const navigate = useNavigate();
 
   const [activeLayer, setActiveLayer] = useState<'cadastral' | 'satellite' | 'hybrid'>('cadastral');
   const [selectedPoint, setSelectedPoint] = useState<number | null>(1);
 
   if (!isModalOpen('dgpsViewer')) return null;
+
+  const isAuthorized = currentUser && ['field_officer', 'intelligence_layer'].includes(currentUser.role);
 
   // Boundary coordinates & Geo-tagged pins
   const boundaryPoints = [
@@ -57,8 +65,82 @@ export const DGPSCadastralViewerModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Top Control Strip */}
-        <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+        {!isAuthorized ? (
+          <div className="p-6 space-y-5 bg-slate-50 overflow-y-auto">
+            <div className="bg-rose-50 border-l-4 border-rose-600 p-4 rounded-r-lg flex items-start gap-3 shadow-xs">
+              <ShieldAlert className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-rose-950 uppercase tracking-wide">
+                  Access Restricted — Statutory Officer Authorization Required
+                </h3>
+                <p className="text-xs text-rose-800 mt-0.5">
+                  High-precision sub-meter NavIC RTK cadastral coordinates and boundary walk telemetry are protected under the Official Secrets Act &amp; RFCTLARR Act 2013. Only designated cadastral officers have access.
+                </p>
+              </div>
+            </div>
+
+            <div className="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs">
+              <div className="bg-[#0B3D66] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-between">
+                <span>Security Clearance Audit Register</span>
+                <span className="text-[11px] font-mono text-amber-300 font-semibold">FORM SEC-403</span>
+              </div>
+              <table className="gov-stage-register">
+                <tbody>
+                  <tr>
+                    <th className="w-1/3">Required Officer Role</th>
+                    <td className="font-bold text-[#0B3D66]">
+                      Senior Revenue Inspector / DGPS Cadastral Surveyor (<span className="font-mono text-xs">field_officer</span>) or Spatial Intelligence Lead (<span className="font-mono text-xs">intelligence_layer</span>)
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Current Session Status</th>
+                    <td>
+                      {currentUser ? (
+                        <span className="text-rose-700 font-bold">
+                          {currentUser.name} ({currentUser.roleTitle}) — <span className="underline">Unauthorized Role</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 font-bold italic">
+                          Unauthenticated Visitor (Session Inactive / Public Mode)
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Statutory Governance Rule</th>
+                    <td className="text-xs text-slate-700">
+                      Section 12 Cadastral RTK Boundary demarcation data contains high-precision geospatial coordinates restricted to licensed survey cadre.
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Remedial Action</th>
+                    <td className="flex items-center gap-3 py-3">
+                      <button
+                        onClick={() => {
+                          closeModal('dgpsViewer');
+                          navigate('/login');
+                        }}
+                        className="bg-[#0B3D66] hover:bg-[#072742] text-white font-bold px-4 py-1.5 rounded text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Log In as Authorized Officer</span>
+                      </button>
+                      <button
+                        onClick={() => closeModal('dgpsViewer')}
+                        className="px-3 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
+                      >
+                        Cancel &amp; Return
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Top Control Strip */}
+            <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -237,6 +319,8 @@ export const DGPSCadastralViewerModal: React.FC = () => {
           </div>
 
         </div>
+        </>
+        )}
 
         {/* Footer */}
         <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between">

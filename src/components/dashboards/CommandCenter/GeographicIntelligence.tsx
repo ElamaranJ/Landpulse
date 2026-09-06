@@ -3,7 +3,7 @@ import { IndiaMap } from '../../common/IndiaMap';
 import { MOCK_PROJECTS, MOCK_STATES } from '../../../data/mockData';
 import { useRole } from '../../../context/RoleContext';
 import type { Project } from '../../../types';
-import { Layers, ChevronRight, ExternalLink, ArrowUpRight, AlertCircle } from 'lucide-react';
+import { ChevronRight, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface GeographicIntelligenceProps {
@@ -15,13 +15,14 @@ export const GeographicIntelligence: React.FC<GeographicIntelligenceProps> = ({
   searchTerm = '',
   statusFilter = 'ALL',
 }) => {
-  const { selectedState, setSelectedProject, setCurrentRole } = useRole();
+  const { selectedState, setSelectedProject, setCurrentRole, projects } = useRole();
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const navigate = useNavigate();
 
   const categories = ['ALL', 'Highways', 'Railways', 'Energy', 'Water', 'Industrial', 'Aviation'];
+  const projectList = projects || MOCK_PROJECTS;
 
-  const filteredProjects = MOCK_PROJECTS.filter((p) => {
+  const filteredProjects = projectList.filter((p) => {
     const matchesCat = selectedCategory === 'ALL' || p.category === selectedCategory;
     const q = searchTerm.trim().toLowerCase();
     const matchesSearch =
@@ -57,158 +58,160 @@ export const GeographicIntelligence: React.FC<GeographicIntelligenceProps> = ({
     navigate('/district-officer');
   };
 
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'critical': return 'gov-status-critical';
+      case 'on_track': return 'gov-status-on-track';
+      case 'delayed': return 'gov-status-delayed';
+      default: return 'gov-status-current';
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 mb-8">
-      {/* Left 7 Columns: Interactive Dominant India GIS Matrix */}
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ marginBottom: '12px' }}>
+      {/* Left: India GIS Map */}
       <div className="lg:col-span-7">
         <IndiaMap />
       </div>
 
-      {/* Right 5 Columns: State Cadastral Summary & Mega Projects Ledger */}
-      <div className="lg:col-span-5 flex flex-col gap-6">
-        {/* Focused State Summary Card */}
-        <div className="gov-card p-6 sm:p-7">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-            <div>
-              <span className="text-xs font-mono text-orange-600 uppercase font-bold tracking-wider block">
-                STATE CADASTRE FOCUS
-              </span>
-              <h3 className="text-xl font-extrabold text-[#0B3D66] font-sans flex items-center gap-2 mt-0.5">
-                {activeStateObj.name}
-                <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold">
-                  {activeStateObj.shortCode}
-                </span>
-              </h3>
-            </div>
-
-            <span
-              className={`gov-badge ${
-                activeStateObj.riskLevel === 'CRITICAL'
-                  ? 'gov-badge-critical'
-                  : activeStateObj.riskLevel === 'LOW'
-                  ? 'gov-badge-success'
-                  : 'gov-badge-warning'
-              }`}
-            >
+      {/* Right: State Summary + Projects Register */}
+      <div className="lg:col-span-5" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* State Facts Table */}
+        <div>
+          <div className="gov-section-divider" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span className="section-label">
+              STATE CADASTRE FOCUS — {activeStateObj.name} ({activeStateObj.shortCode})
+            </span>
+            <span className={`${activeStateObj.riskLevel === 'CRITICAL' ? 'gov-status-critical' : activeStateObj.riskLevel === 'LOW' ? 'gov-status-on-track' : 'gov-status-current'}`} style={{ fontSize: '11px' }}>
               {activeStateObj.riskLevel} RISK
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 mb-4 text-center font-mono">
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-              <span className="text-xs text-slate-500 font-bold uppercase block font-sans">Acquired</span>
-              <span className="text-lg sm:text-xl font-extrabold text-emerald-700 mt-1 block">
-                {activeStateObj.acquiredPercent}%
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-              <span className="text-xs text-slate-500 font-bold uppercase block font-sans">Disbursed</span>
-              <span className="text-lg sm:text-xl font-extrabold text-[#EA580C] mt-1 block">
-                ₹{(activeStateObj.disbursedCr / 1000).toFixed(1)}k Cr
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-              <span className="text-xs text-slate-500 font-bold uppercase block font-sans">Families</span>
-              <span className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1 block">
-                {(activeStateObj.familiesCount / 1000).toFixed(0)}k
-              </span>
-            </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="gov-facts-table gov-facts-table-striped" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '28%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ width: '22%' }}>FIELD</th>
+                  <th style={{ width: '28%' }}>VALUE</th>
+                  <th style={{ width: '22%' }}>FIELD</th>
+                  <th style={{ width: '28%' }}>VALUE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="fact-label">Acquired</td>
+                  <td className="fact-value">{activeStateObj.acquiredPercent}%</td>
+                  <td className="fact-label">Disbursed</td>
+                  <td className="fact-value">₹{(activeStateObj.disbursedCr / 1000).toFixed(1)}k Cr</td>
+                </tr>
+                <tr>
+                  <td className="fact-label">Families</td>
+                  <td className="fact-value">{(activeStateObj.familiesCount / 1000).toFixed(0)}k</td>
+                  <td className="fact-label">Flagship Corridor</td>
+                  <td className="fact-value">{activeStateObj.topProject}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div className="text-xs text-slate-800 bg-[#EFF6FF] p-4 rounded-xl border border-blue-200 flex items-center justify-between font-mono">
-            <div>
-              <span className="text-[11px] text-blue-700 font-bold block font-sans uppercase">Flagship National Corridor:</span>
-              <span className="font-bold text-[#0B3D66] text-sm mt-0.5 block">{activeStateObj.topProject}</span>
-            </div>
-
-            <button
-              onClick={handleNavigateDistrict}
-              className="text-xs bg-[#1D4ED8] hover:bg-[#1E40AF] text-white px-3.5 py-2 rounded-lg font-bold flex items-center gap-1.5 shrink-0 transition-colors shadow-2xs"
-            >
-              <span>District Ledger</span>
-              <ChevronRight className="w-4 h-4" />
+          <div style={{ marginTop: '6px', textAlign: 'right' }}>
+            <button onClick={handleNavigateDistrict} className="gov-flat-btn gov-flat-btn-primary" style={{ fontSize: '11px' }}>
+              District Ledger <ChevronRight style={{ width: '13px', height: '13px' }} />
             </button>
           </div>
         </div>
 
-        {/* Priority Mega Projects Table Ledger */}
-        <div className="gov-card p-6 sm:p-7 flex-1 flex flex-col justify-between">
-          <div>
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100 mb-4">
-              <span className="text-sm font-bold uppercase tracking-wider text-[#0B3D66] font-mono">
-                National Priority Corridors ({filteredProjects.length})
-              </span>
-
-              {/* Category Filter Pills */}
-              <div className="flex items-center gap-1 overflow-x-auto max-w-full">
-                {categories.slice(0, 4).map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`text-xs px-2.5 py-1 rounded-md font-mono font-bold transition-colors ${
-                      selectedCategory === cat
-                        ? 'bg-[#EA580C] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+        {/* Priority Corridors Register Table */}
+        <div>
+          <div className="gov-section-divider" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+            <span className="section-label">
+              NATIONAL PRIORITY CORRIDORS ({filteredProjects.length})
+            </span>
+            <div style={{ display: 'flex', gap: '2px', border: '1px solid #CBD5E1', borderRadius: '2px', overflow: 'hidden' }}>
+              {categories.slice(0, 4).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  style={{
+                    padding: '2px 8px', fontSize: '10px', fontWeight: 700, cursor: 'pointer',
+                    border: 'none', borderRadius: 0,
+                    backgroundColor: selectedCategory === cat ? '#EA580C' : '#FFFFFF',
+                    color: selectedCategory === cat ? '#FFFFFF' : '#475569',
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Project List */}
-            <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-              {filteredProjects.length > 0 ? (
-                filteredProjects.map((proj) => (
-                  <div
-                    key={proj.id}
-                    onClick={() => handleDrilldownProject(proj)}
-                    className="p-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#1D4ED8] transition-all cursor-pointer flex items-center justify-between gap-3 font-mono text-xs shadow-2xs"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
-                          {proj.code}
-                        </span>
-                        <h5 className="font-bold text-sm text-[#0B3D66] truncate font-sans">
-                          {proj.name}
-                        </h5>
-                      </div>
-                      <p className="text-xs text-slate-600 font-sans truncate font-medium">
-                        {proj.state} • {proj.acquiredAcres.toLocaleString()} / {proj.totalAcres.toLocaleString()} Acres ({((proj.acquiredAcres / proj.totalAcres) * 100).toFixed(0)}%)
-                      </p>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <span
-                        className={`gov-badge ${
-                          proj.status === 'critical'
-                            ? 'gov-badge-critical'
-                            : proj.status === 'on_track'
-                            ? 'gov-badge-success'
-                            : proj.status === 'delayed'
-                            ? 'gov-badge-warning'
-                            : 'gov-badge-info'
-                        }`}
-                      >
-                        {proj.status.replace('_', ' ')}
-                      </span>
-                      <span className="text-xs text-slate-800 font-bold block mt-1">
-                        ₹{(proj.disbursedCr / 1000).toFixed(1)}k Cr
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-6 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <AlertCircle className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
-                  <p className="font-bold text-xs text-slate-700">No corridors match search criteria</p>
-                </div>
-              )}
-            </div>
+          <div style={{ maxHeight: '320px', overflowY: 'auto', overflowX: 'auto' }}>
+            <table className="gov-stage-register" style={{ fontSize: '13.5px', tableLayout: 'fixed', minWidth: '580px', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '75px' }} />
+                <col style={{ width: '160px' }} />
+                <col style={{ width: '100px' }} />
+                <col style={{ width: '100px' }} />
+                <col style={{ width: '75px' }} />
+                <col style={{ width: '70px' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ width: '75px' }}>Code</th>
+                  <th style={{ width: '160px' }}>Name</th>
+                  <th style={{ width: '100px' }}>Acres</th>
+                  <th style={{ width: '100px' }}>Status</th>
+                  <th style={{ width: '75px', textAlign: 'right' }}>₹ Cr</th>
+                  <th style={{ width: '70px', textAlign: 'center' }}>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProjects.length > 0 ? (
+                  filteredProjects.map((proj) => (
+                    <tr
+                      key={proj.id}
+                      onClick={() => handleDrilldownProject(proj)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td style={{ fontWeight: 700, color: '#0B3D66', fontSize: '13px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{proj.code}</td>
+                      <td style={{ verticalAlign: 'middle', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={proj.name}>
+                        <strong style={{ color: '#0B3D66', fontSize: '14px' }}>{proj.name}</strong>
+                        <div style={{ fontSize: '12px', color: '#64748B' }}>{proj.state}</div>
+                      </td>
+                      <td style={{ fontSize: '13px', verticalAlign: 'middle' }}>{proj.acquiredAcres.toLocaleString()} / {proj.totalAcres.toLocaleString()}</td>
+                      <td style={{ verticalAlign: 'middle' }}><span className={getStatusClass(proj.status)}>{proj.status.replace('_', ' ')}</span></td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '13.5px', verticalAlign: 'middle' }}>₹{(proj.disbursedCr / 1000).toFixed(1)}k</td>
+                      <td style={{ textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDrilldownProject(proj);
+                          }}
+                          className="gov-flat-btn gov-flat-btn-secondary"
+                          style={{ fontSize: '12px', padding: '3px 8px', height: '24px' }}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#94A3B8' }}>
+                      <AlertCircle style={{ width: '16px', height: '16px', margin: '0 auto 4px', display: 'block' }} />
+                      No corridors match search criteria
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

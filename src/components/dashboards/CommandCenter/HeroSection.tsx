@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useRole } from '../../../context/RoleContext';
 import { useModals } from '../../../context/ModalContext';
-import { RefreshCw, Download, Filter, SlidersHorizontal } from 'lucide-react';
+import { RefreshCw, Download } from 'lucide-react';
 import { MOCK_STATES } from '../../../data/mockData';
 
 export const HeroSection: React.FC = () => {
@@ -16,49 +16,41 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <div className="gov-card p-6 sm:p-7 mb-8">
-      {/* Title & Actions Row */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100">
-        <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#0B3D66] font-sans tracking-tight">
-              National Land Acquisition Telemetry &amp; MIS Console
-            </h2>
-            <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold font-mono border border-emerald-200">
-              ● LIVE TELEMETRY
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Real-Time DGPS Cadastral Grid • 28 States &amp; 8 UTs • RFCTLARR 2013 Statutory Compliance
-          </p>
+    <div style={{ marginBottom: '12px' }}>
+      {/* Register Header */}
+      <div className="gov-register-header">
+        <div className="reg-meta">
+          MONITORING &amp; COMMAND CENTER &bull; REAL-TIME DGPS CADASTRAL GRID &bull; 28 STATES &amp; 8 UTs &bull; RFCTLARR 2013
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="h-11 px-4 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700 text-sm font-semibold flex items-center gap-2 transition-all shadow-2xs"
-          >
-            <RefreshCw className={`w-4 h-4 text-slate-500 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isRefreshing ? 'Syncing...' : 'Sync Telemetry'}</span>
-          </button>
-
-          <button
-            onClick={() => openModal('exportModal')}
-            className="h-11 px-5 rounded-lg bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold flex items-center gap-2 transition-all shadow-xs"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export Executive Dossier</span>
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="reg-title">
+            National Land Acquisition Telemetry &amp; MIS Console
+            <span className="gov-verified-tag" style={{ marginLeft: '10px', fontSize: '10px', color: '#059669' }}>● LIVE TELEMETRY</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="gov-flat-btn gov-flat-btn-secondary"
+            >
+              <RefreshCw style={{ width: '14px', height: '14px', animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+              {isRefreshing ? 'Syncing...' : 'Sync Telemetry'}
+            </button>
+            <button
+              onClick={() => openModal('exportModal')}
+              className="gov-flat-btn gov-flat-btn-orange"
+            >
+              <Download style={{ width: '14px', height: '14px' }} />
+              Export Executive Dossier
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Query Filter Matrix Bar — 44px height inputs with clear labels */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-6">
-        {/* State Selection */}
+      {/* Filter Matrix */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" style={{ marginTop: '10px' }}>
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>
             Jurisdiction (State / UT)
           </label>
           <select
@@ -75,16 +67,11 @@ export const HeroSection: React.FC = () => {
           </select>
         </div>
 
-        {/* Ministry Filter */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>
             Executing Central Ministry
           </label>
-          <select
-            value={selectedMinistry}
-            onChange={(e) => setSelectedMinistry(e.target.value)}
-            className="gov-select w-full"
-          >
+          <select value={selectedMinistry} onChange={(e) => setSelectedMinistry(e.target.value)} className="gov-select w-full">
             <option value="ALL">All Ministries (Cross-Sectoral)</option>
             <option value="MoRTH">MoRTH (Highways &amp; Expressways)</option>
             <option value="Railways">Ministry of Railways (DFC &amp; HSR)</option>
@@ -94,9 +81,8 @@ export const HeroSection: React.FC = () => {
           </select>
         </div>
 
-        {/* Status Filter */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>
             Statutory Stage Filter
           </label>
           <select className="gov-select w-full">
@@ -110,9 +96,8 @@ export const HeroSection: React.FC = () => {
           </select>
         </div>
 
-        {/* Financial Year Filter */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '3px' }}>
             Fiscal Lock &amp; Audit Year
           </label>
           <select className="gov-select w-full">

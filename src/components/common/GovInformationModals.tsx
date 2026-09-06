@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { useModals } from '../../context/ModalContext';
 import {
-  Info,
+  X,
+  CheckCircle2,
+  ChevronDown,
   Phone,
   HelpCircle,
   Network,
-  X,
-  CheckCircle2,
-  ExternalLink,
-  ChevronDown,
-  ChevronRight,
-  Building2,
-  ShieldAlert,
+  Info,
   Award,
-  BookOpen,
-  FileCheck
+  Layers,
+  FileCheck,
+  ShieldAlert,
+  Cpu
 } from 'lucide-react';
 
 export const GovInformationModals: React.FC = () => {
@@ -61,223 +59,301 @@ export const GovInformationModals: React.FC = () => {
     <>
       {/* ── 1. About LandPulse & SIH26016 Problem Statement Modal ── */}
       {aboutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh] text-slate-800 font-sans">
-            <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-xl">
-                  <Info className="w-6 h-6 text-amber-300" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold">About LandPulse &amp; Vision</h2>
-                  <p className="text-xs text-blue-200">
-                    Smart India Hackathon SIH26016 • Ministry of Rural Development &amp; DoLR
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden p-6 sm:p-8 relative my-auto">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3">
+              <div>
+                <h2 className="text-2xl sm:text-[26px] font-bold text-[#0F172A] tracking-tight">
+                  About LandPulse &amp; Vision
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Smart India Hackathon SIH26016 • Ministry of Rural Development &amp; DoLR
+                </p>
               </div>
               <button
                 onClick={() => closeModal('about')}
-                className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-700 leading-relaxed">
-              {/* Mission Statement Box */}
-              <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200">
-                <span className="text-[10px] uppercase font-bold text-blue-900 tracking-wider block mb-1">
-                  National Vision &amp; Mandate
-                </span>
-                <p className="text-sm font-semibold text-[#0B3D66]">
-                  &quot;To transform India's land acquisition lifecycle from opaque, delayed paperwork into a transparent, geospatial, and AI-assisted single-source-of-truth for citizens and administrators.&quot;
-                </p>
-              </div>
-
-              {/* SIH26016 Problem Statement */}
+            <div className="space-y-6 mt-4">
+              
+              {/* Section 1: National Vision & Mandate */}
               <div>
-                <h3 className="text-sm font-bold text-[#0B3D66] flex items-center gap-1.5 mb-2">
-                  <Award className="w-4 h-4 text-amber-500" />
-                  <span>SIH26016 Problem Statement Scope</span>
-                </h3>
-                <p>
-                  Infrastructure bottlenecks in mega highway corridors, freight expressways, and industrial corridors often suffer 18–36 month delays due to fragmented cadastral titling, disputes in compensation awards, and lack of real-time spatial ground verification. LandPulse solves this via:
-                </p>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 font-medium">
-                  <li className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>GIS Satellite Map Layer:</strong> High-resolution Esri imagery with cadastral polygon boundaries.</span>
-                  </li>
-                  <li className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Field Officer Module:</strong> Prioritized queue, GPS navigation, and on-ground inspection submissions.</span>
-                  </li>
-                  <li className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>RFCTLARR 2013 Engine:</strong> Automated market rate multiplication, 100% Solatium, and DBT reconciliation.</span>
-                  </li>
-                  <li className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Predictive Risk AI:</strong> Multi-factor bottleneck prediction with early litigation flagging.</span>
-                  </li>
-                </ul>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </div>
+                  <span className="font-bold text-sm text-[#1E293B]">Problem Statement: SIH26016 Scope</span>
+                </div>
+
+                {/* Vision Box */}
+                <div className="bg-[#F0F9F2] border border-[#CDEEDB] rounded-xl p-5 mb-4">
+                  <div className="text-xs font-bold uppercase tracking-wider text-[#0D6832] mb-1">
+                    National Vision &amp; Mandate
+                  </div>
+                  <p className="text-base sm:text-lg font-bold text-[#1E293B] leading-snug">
+                    &quot;To transform India&apos;s land acquisition lifecycle from opaque, delayed paperwork into a transparent, geospatial, and AI-assisted single-source-of-truth for citizens and administrators.&quot;
+                  </p>
+                  <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                    Mega infrastructure corridors across highways, freight lines, and industrial nodes frequently suffer 18–36 month delays due to fragmented cadastral titling, valuation disputes, and ground verification discrepancies. LandPulse unifies these systems end-to-end.
+                  </p>
+                </div>
               </div>
 
-              {/* Department Info */}
-              <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500">
-                <span>Department of Land Resources (DoLR) • Ministry of Rural Development</span>
-                <span className="font-mono font-bold text-slate-700">LandPulse v2.4 (GIGW 3.0 Certified)</span>
+              {/* Section 2: Key Technical Innovations */}
+              <div>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    2
+                  </div>
+                  <span className="font-bold text-sm text-[#1E293B]">Core Innovations &amp; Architecture</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                    <div className="flex items-center gap-2 text-[#1E4D79] font-bold text-sm">
+                      <Layers className="w-4 h-4 text-[#1E4D79]" />
+                      <span>GIS Satellite Cadastral Sync</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Sub-meter accuracy overlaying Esri high-resolution satellite imagery with revenue survey numbers and OpenStreetMap infrastructure alignment corridors.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                    <div className="flex items-center gap-2 text-[#1E4D79] font-bold text-sm">
+                      <FileCheck className="w-4 h-4 text-[#1E4D79]" />
+                      <span>Automated RFCTLARR Valuation</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Statutory algorithm adhering to Sections 26–30: applying 1.0–2.0× rural multipliers, 100% Solatium, and 12% p.a. interest direct into PFMS DBT accounts.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                    <div className="flex items-center gap-2 text-[#1E4D79] font-bold text-sm">
+                      <Cpu className="w-4 h-4 text-[#1E4D79]" />
+                      <span>Predictive Risk AI &amp; Bottlenecks</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Machine learning risk models identifying high-litigation parcels, title contestation hazards, and scheduling bottlenecks before award deadlines expire.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                    <div className="flex items-center gap-2 text-[#1E4D79] font-bold text-sm">
+                      <ShieldAlert className="w-4 h-4 text-[#1E4D79]" />
+                      <span>Section 15 Citizen Transparency</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Citizen self-service portal for real-time tracking, Aadhaar e-KYC award validation, and 60-day statutory objection submissions with CPGRAMS sync.
+                    </p>
+                  </div>
+                </div>
               </div>
+
+              {/* Section 3: Statutory Standards Note */}
+              <div className="bg-[#F0F6FB] border border-[#D3E4F2] rounded-xl p-4 flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#1E4D79] text-white flex items-center justify-center text-xs font-serif font-bold shrink-0 mt-0.5">
+                  i
+                </div>
+                <div className="text-xs leading-relaxed text-slate-700">
+                  <span className="font-bold text-[#1E3A5F]">Statutory Entitlement &amp; Compliance Standards:</span>{' '}
+                  Compliant with Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 (RFCTLARR), Guidelines for Indian Government Websites (GIGW 3.0), and PM GatiShakti National Master Plan guidelines.
+                </div>
+              </div>
+
             </div>
 
-            <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
+            {/* Bottom Form Actions */}
+            <div className="flex items-center justify-end pt-6 mt-4 border-t border-slate-100">
               <button
+                type="button"
                 onClick={() => closeModal('about')}
-                className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded-lg cursor-pointer"
+                className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 Close
               </button>
             </div>
+
           </div>
         </div>
       )}
 
       {/* ── 2. Helpline & Support Directory Modal ── */}
       {helplineOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh] text-slate-800 font-sans">
-            <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-xl">
-                  <Phone className="w-6 h-6 text-amber-300" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold">Helpline &amp; Citizen Support</h2>
-                  <p className="text-xs text-blue-200">
-                    24x7 Land Acquisition Assistance &amp; Helpdesk Directory
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden p-6 sm:p-8 relative my-auto">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3">
+              <div>
+                <h2 className="text-2xl sm:text-[26px] font-bold text-[#0F172A] tracking-tight">
+                  Helpline &amp; Citizen Support
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  24x7 Land Acquisition Assistance &amp; Helpdesk Directory
+                </p>
               </div>
               <button
                 onClick={() => closeModal('helpline')}
-                className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4 text-xs">
-              {/* National Toll-Free Banner */}
-              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-emerald-800">National Land Acquisition Helpline</span>
-                  <div className="text-xl font-black text-emerald-900 font-mono mt-0.5">1800-11-LAND (1800-11-5263)</div>
-                  <span className="text-[11px] text-emerald-700">Toll-free • Available in 12 Indian Regional Languages • 24x7</span>
+            <div className="space-y-6 mt-4">
+              {/* Section 1: National Toll-Free */}
+              <div>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </div>
+                  <span className="font-bold text-sm text-[#1E293B]">National Toll-Free Land Assistance</span>
                 </div>
-                <Phone className="w-8 h-8 text-emerald-600 hidden sm:block" />
+
+                <div className="bg-[#F0F9F2] border border-[#CDEEDB] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-[#0D6832]">
+                      Direct Citizen Support Line
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-black text-[#0D6832] font-mono mt-1">
+                      1800-11-LAND (1800-11-5263)
+                    </div>
+                    <div className="text-xs text-[#526477] mt-1">
+                      Toll-free • Available in 12 Indian Languages • 24x7 Coverage
+                    </div>
+                  </div>
+                  <div className="p-3 bg-emerald-100/60 rounded-full w-12 h-12 flex items-center justify-center shrink-0">
+                    <Phone className="w-6 h-6 text-emerald-700" />
+                  </div>
+                </div>
               </div>
 
-              {/* Direct Help Desks */}
-              <div className="space-y-2.5">
-                <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider text-slate-500">
-                  Regional &amp; Departmental Nodal Desks
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                    <span className="font-bold text-[#0B3D66] block">Central PM GatiShakti Helpdesk</span>
-                    <p className="text-slate-600 text-[11px]">Nirman Bhawan, New Delhi</p>
-                    <p className="text-slate-700 font-mono text-[11px]">📞 011-2306-1248 | ✉️ support-gatishakti@gov.in</p>
+              {/* Section 2: Regional & Nodal Desks */}
+              <div>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    2
                   </div>
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                    <span className="font-bold text-[#0B3D66] block">PFMS DBT Disbursal Cell</span>
-                    <p className="text-slate-600 text-[11px]">Ministry of Finance, New Delhi</p>
-                    <p className="text-slate-700 font-mono text-[11px]">📞 011-2334-9021 | ✉️ dbt-support@nic.in</p>
+                  <span className="font-bold text-sm text-[#1E293B]">Regional &amp; Departmental Nodal Desks</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                    <span className="font-bold text-sm text-[#1E4D79] block">Central PM GatiShakti Helpdesk</span>
+                    <p className="text-xs text-slate-600">Nirman Bhawan, New Delhi</p>
+                    <p className="text-xs font-mono font-medium text-slate-800">📞 011-2306-1248 | ✉️ support-gatishakti@gov.in</p>
                   </div>
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                    <span className="font-bold text-[#0B3D66] block">CPGRAMS Grievance Cell</span>
-                    <p className="text-slate-600 text-[11px]">Department of Administrative Reforms</p>
-                    <p className="text-slate-700 font-mono text-[11px]">📞 011-2374-1000 | ✉️ pgportal@gov.in</p>
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                    <span className="font-bold text-sm text-[#1E4D79] block">PFMS DBT Disbursal Cell</span>
+                    <p className="text-xs text-slate-600">Ministry of Finance, New Delhi</p>
+                    <p className="text-xs font-mono font-medium text-slate-800">📞 011-2334-9021 | ✉️ dbt-support@nic.in</p>
                   </div>
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                    <span className="font-bold text-[#0B3D66] block">DGPS / Spatial Survey Cell</span>
-                    <p className="text-slate-600 text-[11px]">Survey of India &amp; ISRO Bhuvan</p>
-                    <p className="text-slate-700 font-mono text-[11px]">📞 0135-2747051 | ✉️ survey-help@soi.gov.in</p>
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                    <span className="font-bold text-sm text-[#1E4D79] block">CPGRAMS Grievance Cell</span>
+                    <p className="text-xs text-slate-600">Department of Administrative Reforms</p>
+                    <p className="text-xs font-mono font-medium text-slate-800">📞 011-2374-1000 | ✉️ pgportal@gov.in</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                    <span className="font-bold text-sm text-[#1E4D79] block">DGPS / Spatial Survey Cell</span>
+                    <p className="text-xs text-slate-600">Survey of India &amp; ISRO Bhuvan</p>
+                    <p className="text-xs font-mono font-medium text-slate-800">📞 0135-2747051 | ✉️ survey-help@soi.gov.in</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-between items-center">
+            {/* Bottom Form Actions */}
+            <div className="flex items-center justify-between pt-6 mt-4 border-t border-slate-100">
               <button
+                type="button"
                 onClick={() => {
                   closeModal('helpline');
                   openModal('grievance');
                 }}
-                className="text-xs font-bold text-blue-700 hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#1E4D79] hover:underline cursor-pointer"
               >
                 Need to lodge an official objection? Click here
               </button>
               <button
+                type="button"
                 onClick={() => closeModal('helpline')}
-                className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded-lg cursor-pointer"
+                className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
               >
-                Close
+                Close Support
               </button>
             </div>
+
           </div>
         </div>
       )}
 
       {/* ── 3. Interactive FAQs Modal ── */}
       {faqsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh] text-slate-800 font-sans">
-            <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-xl">
-                  <HelpCircle className="w-6 h-6 text-amber-300" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold">Frequently Asked Questions (FAQs)</h2>
-                  <p className="text-xs text-blue-200">
-                    RFCTLARR 2013 Compensation, Valuation &amp; GIS Land Acquisition Guidance
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden p-6 sm:p-8 relative my-auto">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3">
+              <div>
+                <h2 className="text-2xl sm:text-[26px] font-bold text-[#0F172A] tracking-tight">
+                  Frequently Asked Questions (FAQs)
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  RFCTLARR 2013 Compensation, Valuation &amp; GIS Guidance
+                </p>
               </div>
               <button
                 onClick={() => closeModal('faqs')}
-                className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-4 text-xs">
+            <div className="space-y-4 mt-4">
               {/* Search bar inside FAQs */}
               <input
                 type="text"
                 value={faqSearch}
                 onChange={e => setFaqSearch(e.target.value)}
-                placeholder="Search FAQs by question or topic (e.g. compensation, objection, DGPS)..."
-                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                placeholder="Search FAQs by question or keyword (e.g. compensation, objection, DGPS)..."
+                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79]"
               />
 
+              <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  1
+                </div>
+                <span className="font-bold text-sm text-[#1E293B]">Frequently Asked Questions ({filteredFaqs.length})</span>
+              </div>
+
               {/* Accordion FAQ list */}
-              <div className="space-y-2">
+              <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
                 {filteredFaqs.map((faq, idx) => {
                   const isExpanded = expandedFaqIndex === idx;
                   return (
-                    <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
+                    <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
                       <button
                         type="button"
                         onClick={() => setExpandedFaqIndex(isExpanded ? null : idx)}
-                        className="w-full text-left p-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between font-bold text-[#0B3D66] transition-colors cursor-pointer"
+                        className="w-full text-left p-3.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between font-bold text-sm text-[#1E293B] transition-colors cursor-pointer"
                       >
                         <span className="pr-4">{faq.q}</span>
-                        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
                       </button>
                       {isExpanded && (
-                        <div className="p-3.5 bg-white text-slate-700 leading-relaxed border-t border-slate-200 text-xs">
+                        <div className="p-4 bg-white text-slate-700 leading-relaxed border-t border-slate-200 text-xs">
                           {faq.a}
                         </div>
                       )}
@@ -287,99 +363,111 @@ export const GovInformationModals: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
+            {/* Bottom Form Actions */}
+            <div className="flex items-center justify-end pt-6 mt-4 border-t border-slate-100">
               <button
+                type="button"
                 onClick={() => closeModal('faqs')}
-                className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded-lg cursor-pointer"
+                className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 Close FAQs
               </button>
             </div>
+
           </div>
         </div>
       )}
 
       {/* ── 4. Ministry Structure & Org Chart Modal ── */}
       {orgChartOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh] text-slate-800 font-sans">
-            <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-xl">
-                  <Network className="w-6 h-6 text-amber-300" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold">Ministry Structure &amp; Institutional Framework</h2>
-                  <p className="text-xs text-blue-200">
-                    Department of Land Resources (DoLR) • RFCTLARR 2013 Competent Authority Flow
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden p-6 sm:p-8 relative my-auto">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3">
+              <div>
+                <h2 className="text-2xl sm:text-[26px] font-bold text-[#0F172A] tracking-tight">
+                  Ministry Structure &amp; Framework
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Department of Land Resources (DoLR) • RFCTLARR 2013 Competent Authority Flow
+                </p>
               </div>
               <button
                 onClick={() => closeModal('orgChart')}
-                className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-6 text-xs">
-              {/* Hierarchy Tree */}
-              <div className="space-y-4">
-                {/* Level 1: Union Cabinet & Ministry */}
-                <div className="p-3 bg-blue-900 text-white rounded-xl text-center max-w-md mx-auto shadow-md">
+            <div className="space-y-6 mt-4">
+              <div>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </div>
+                  <span className="font-bold text-sm text-[#1E293B]">Statutory Hierarchy &amp; Reporting Channels</span>
+                </div>
+
+                {/* Level 1: Union Cabinet */}
+                <div className="p-4 bg-[#1E3A5F] text-white rounded-xl text-center max-w-md mx-auto shadow-sm">
                   <span className="text-[10px] uppercase tracking-wider text-amber-300 font-bold">Apex National Authority</span>
-                  <h4 className="font-extrabold text-sm">Hon'ble Union Minister for Rural Development &amp; DoLR</h4>
-                  <p className="text-[11px] text-blue-200 mt-0.5">Krishi Bhawan, New Delhi</p>
+                  <h4 className="font-bold text-sm mt-0.5">Hon&apos;ble Union Minister for Rural Development &amp; DoLR</h4>
+                  <p className="text-xs text-blue-200 mt-0.5">Krishi Bhawan, New Delhi</p>
                 </div>
 
-                <div className="w-0.5 h-4 bg-slate-300 mx-auto"></div>
+                <div className="w-0.5 h-4 bg-slate-300 mx-auto my-2"></div>
 
-                {/* Level 2: Secretariat Leadership */}
+                {/* Level 2: Secretariat */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-center shadow-xs">
-                    <span className="text-[10px] uppercase font-bold text-blue-800">DoLR Secretariat</span>
-                    <h5 className="font-bold text-slate-900 text-xs">Secretary (Land Resources)</h5>
-                    <p className="text-[10.5px] text-slate-500">Policy, Rules &amp; RFCTLARR Oversight</p>
+                  <div className="p-4 bg-[#F0F6FB] border border-[#D3E4F2] rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-[#1E4D79]">DoLR Secretariat</span>
+                    <h5 className="font-bold text-slate-900 text-xs mt-0.5">Secretary (Land Resources)</h5>
+                    <p className="text-[11px] text-slate-600">Policy, Rules &amp; RFCTLARR Oversight</p>
                   </div>
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-center shadow-xs">
-                    <span className="text-[10px] uppercase font-bold text-blue-800">PM GatiShakti Integration</span>
-                    <h5 className="font-bold text-slate-900 text-xs">Special Nodal Advisor</h5>
-                    <p className="text-[10.5px] text-slate-500">Multi-modal Corridor Land Clearance</p>
+                  <div className="p-4 bg-[#F0F6FB] border border-[#D3E4F2] rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-[#1E4D79]">PM GatiShakti Integration</span>
+                    <h5 className="font-bold text-slate-900 text-xs mt-0.5">Special Nodal Advisor</h5>
+                    <p className="text-[11px] text-slate-600">Multi-modal Corridor Land Clearance</p>
                   </div>
                 </div>
 
-                <div className="w-0.5 h-4 bg-slate-300 mx-auto"></div>
+                <div className="w-0.5 h-4 bg-slate-300 mx-auto my-2"></div>
 
-                {/* Level 3: State & District Authorities */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                    <span className="text-[10px] uppercase font-bold text-orange-600">State Revenue Level</span>
-                    <h5 className="font-bold text-slate-900 text-xs">Principal Secretary (Revenue)</h5>
-                    <p className="text-[10.5px] text-slate-500">State Gazette Notifications</p>
+                {/* Level 3: State & District */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-amber-700">State Revenue Level</span>
+                    <h5 className="font-bold text-slate-900 text-xs mt-0.5">Principal Secretary (Revenue)</h5>
+                    <p className="text-[11px] text-slate-600">State Gazette Notifications</p>
                   </div>
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                    <span className="text-[10px] uppercase font-bold text-emerald-600">District Competent Authority</span>
-                    <h5 className="font-bold text-slate-900 text-xs">District Collector / CALA</h5>
-                    <p className="text-[10.5px] text-slate-500">Award Declaration &amp; Section 15 Hearings</p>
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-emerald-700">District Authority</span>
+                    <h5 className="font-bold text-slate-900 text-xs mt-0.5">District Collector / CALA</h5>
+                    <p className="text-[11px] text-slate-600">Award Declaration &amp; Sec 15 Hearings</p>
                   </div>
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                    <span className="text-[10px] uppercase font-bold text-purple-600">Field Operational Cadre</span>
-                    <h5 className="font-bold text-slate-900 text-xs">SLAO &amp; DGPS Revenue Inspector</h5>
-                    <p className="text-[10.5px] text-slate-500">Ground Cadastral Demarcation</p>
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                    <span className="text-[10px] uppercase font-bold text-blue-700">Field Cadre</span>
+                    <h5 className="font-bold text-slate-900 text-xs mt-0.5">SLAO &amp; DGPS Revenue Inspector</h5>
+                    <p className="text-[11px] text-slate-600">Ground Cadastral Demarcation</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
+            {/* Bottom Form Actions */}
+            <div className="flex items-center justify-end pt-6 mt-4 border-t border-slate-100">
               <button
+                type="button"
                 onClick={() => closeModal('orgChart')}
-                className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded-lg cursor-pointer"
+                className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 Close Structure
               </button>
             </div>
+
           </div>
         </div>
       )}

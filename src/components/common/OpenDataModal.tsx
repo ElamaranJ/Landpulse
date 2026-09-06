@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
 import { useModals } from '../../context/ModalContext';
 import {
-  Database,
   X,
   Download,
-  Code,
-  ExternalLink,
-  CheckCircle,
-  FileSpreadsheet,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 
 export const OpenDataModal: React.FC = () => {
   const { isModalOpen, closeModal } = useModals();
-
-  const [selectedDataset, setSelectedDataset] = useState('corridors');
+  const [selectedDataset] = useState('corridors');
 
   if (!isModalOpen('openData')) return null;
 
@@ -50,101 +42,111 @@ export const OpenDataModal: React.FC = () => {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden p-6 sm:p-8 relative my-auto">
         
         {/* Header */}
-        <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg">
-              <Database className="w-6 h-6 text-amber-300" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold">LandPulse Open Data Portal &amp; REST APIs</h2>
-              <p className="text-xs text-blue-200">
-                National Data Sharing and Accessibility Policy (NDSAP) • data.gov.in Synchronized
-              </p>
-            </div>
+        <div className="flex items-start justify-between pb-3">
+          <div>
+            <h2 className="text-2xl sm:text-[26px] font-bold text-[#0F172A] tracking-tight">
+              Open Data Portal &amp; REST APIs
+            </h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              National Data Sharing &amp; Accessibility Policy (NDSAP) • data.gov.in Synchronized
+            </p>
           </div>
           <button
             onClick={() => closeModal('openData')}
-            className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
-          
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-bold text-[#0B3D66] uppercase tracking-wider">
-                Public REST API Endpoint (v2.4)
-              </h3>
-              <div className="font-mono text-xs text-slate-800 font-bold mt-1 bg-white px-3 py-1.5 rounded border border-slate-300">
-                GET https://api.landpulse.gov.in/v2/datasets/national-mis.json
+        {/* Content */}
+        <div className="space-y-6 mt-4">
+          {/* Section 1: API Endpoint */}
+          <div>
+            <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                1
               </div>
+              <span className="font-bold text-sm text-[#1E293B]">Public REST API Endpoint (v2.4)</span>
             </div>
-            <button
-              onClick={() => alert('API Key token generated: GOV-DATA-2026-OPEN-9921')}
-              className="px-3.5 py-1.5 bg-[#0B3D66] text-white text-xs font-bold rounded shadow-xs"
-            >
-              Get Free API Key
-            </button>
+
+            <div className="bg-[#F0F6FB] border border-[#D3E4F2] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold text-[#1E4D79]">Official Production Endpoint</div>
+                <div className="font-mono text-xs text-slate-900 font-bold mt-1 bg-white px-3 py-2 rounded-lg border border-slate-200 inline-block">
+                  GET https://api.landpulse.gov.in/v2/datasets/national-mis.json
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => alert('API Key token generated: GOV-DATA-2026-OPEN-9921')}
+                className="px-6 py-2 bg-[#1E4D79] hover:bg-[#163B5F] text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer shrink-0"
+              >
+                Get Free API Key
+              </button>
+            </div>
           </div>
 
-          {/* Dataset Catalogue */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Available Open Datasets
-            </h3>
+          {/* Section 2: Datasets */}
+          <div>
+            <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                2
+              </div>
+              <span className="font-bold text-sm text-[#1E293B]">Available Open Datasets ({datasets.length})</span>
+            </div>
 
             <div className="space-y-3">
               {datasets.map((d) => (
                 <div
                   key={d.id}
-                  className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-2 hover:border-blue-400 transition-colors"
+                  className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-2xs space-y-3 hover:border-[#1E4D79] transition-colors"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div>
-                      <h4 className="text-sm font-bold text-[#0B3D66]">{d.title}</h4>
-                      <p className="text-xs text-slate-600 mt-0.5">{d.description}</p>
+                      <h4 className="text-base font-bold text-[#1E293B]">{d.title}</h4>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">{d.description}</p>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2 shrink-0">
                       {d.formats.map((fmt) => (
                         <button
                           key={fmt}
+                          type="button"
                           onClick={() => alert(`Downloading ${d.title} as ${fmt} (${d.size})`)}
-                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded border border-slate-300 flex items-center gap-1"
+                          className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-[#1E4D79] text-xs font-bold rounded-lg border border-slate-300 flex items-center gap-1.5 shadow-2xs cursor-pointer"
                         >
-                          <Download className="w-3 h-3 text-[#0B3D66]" /> {fmt}
+                          <Download className="w-3.5 h-3.5" /> {fmt}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-xs text-slate-500 pt-1 font-mono">
-                    <span>Records: <strong>{d.records}</strong></span>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100 font-mono">
+                    <span>Records: <strong className="text-slate-800">{d.records}</strong></span>
                     <span>•</span>
-                    <span>File Size: <strong>{d.size}</strong></span>
+                    <span>File Size: <strong className="text-slate-800">{d.size}</strong></span>
                     <span>•</span>
-                    <span>Last Updated: <strong>{d.updated}</strong></span>
+                    <span>Last Updated: <strong className="text-slate-800">{d.updated}</strong></span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
 
-        {/* Footer */}
-        <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        {/* Bottom Footer */}
+        <div className="flex items-center justify-between pt-6 mt-6 border-t border-slate-100 text-xs text-slate-500">
           <span>License: Government Open Data License - India (GODL)</span>
           <button
+            type="button"
             onClick={() => closeModal('openData')}
-            className="px-4 py-1.5 bg-[#0B3D66] text-white font-bold rounded"
+            className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             Close
           </button>

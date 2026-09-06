@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { useModals } from '../../context/ModalContext';
 import {
-  AlertCircle,
   X,
-  FileCheck2,
-  Send,
-  Upload,
   CheckCircle2,
   Clock,
-  HelpCircle,
+  Upload,
+  Send,
   Phone,
-  FileText,
 } from 'lucide-react';
 
 interface TrackingResult {
@@ -39,7 +35,7 @@ export const GrievanceModal: React.FC = () => {
 
   // Tracking tab state
   const [trackTicketNumber, setTrackTicketNumber] = useState('CPGRAMS-DoLR-2026-88219');
-  const [trackingResult, setTrackingResult] = useState<TrackingResult>({
+  const [trackingResult] = useState<TrackingResult>({
     ticket: 'CPGRAMS-DoLR-2026-88219',
     filedDate: '12 Aug 2026',
     status: 'HEARING_SCHEDULED',
@@ -57,63 +53,73 @@ export const GrievanceModal: React.FC = () => {
     setSubmittedTicket(token);
   };
 
+  const handleReset = () => {
+    setCaseId('');
+    setSurveyNo('');
+    setClaimantName('');
+    setPhone('');
+    setGrievanceText('');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden p-6 sm:p-8 relative my-auto">
         
         {/* Header */}
-        <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg">
-              <FileCheck2 className="w-6 h-6 text-amber-300" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold">Lodge Objection &amp; CPGRAMS Grievance</h2>
-              <p className="text-xs text-blue-200">
-                Statutory Section 15 Inquiries &amp; Direct CALA Redressal Gateway
-              </p>
-            </div>
+        <div className="flex items-start justify-between pb-3">
+          <div>
+            <h2 className="text-2xl sm:text-[26px] font-bold text-[#0F172A] tracking-tight">
+              Lodge Objection &amp; CPGRAMS Grievance
+            </h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Statutory Section 15 Inquiries &amp; Direct CALA Redressal Gateway
+            </p>
           </div>
           <button
             onClick={() => closeModal('grievance')}
-            className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab switcher */}
-        <div className="flex border-b border-slate-200 bg-slate-50 font-bold text-xs">
+        {/* Tab switch bar */}
+        <div className="flex bg-[#EEF3F8] p-1 rounded-xl gap-1 mt-4 mb-6">
           <button
+            type="button"
             onClick={() => setActiveTab('lodge')}
-            className={`flex-1 py-3 text-center border-b-2 transition-colors ${
+            className={`flex-1 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
               activeTab === 'lodge'
-                ? 'bg-white text-[#0B3D66] border-[#0B3D66]'
-                : 'text-slate-600 border-transparent hover:bg-slate-100'
+                ? 'bg-white text-[#1E3A5F] shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Lodge Section 15 Objection / CPGRAMS Grievance
+            Lodge Section 15 Objection / Grievance
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab('track')}
-            className={`flex-1 py-3 text-center border-b-2 transition-colors ${
+            className={`flex-1 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
               activeTab === 'track'
-                ? 'bg-white text-[#0B3D66] border-[#0B3D66]'
-                : 'text-slate-600 border-transparent hover:bg-slate-100'
+                ? 'bg-white text-[#1E3A5F] shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Track Existing Grievance Status
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
+        {/* Content Body */}
+        <div className="space-y-6">
           {activeTab === 'lodge' ? (
             submittedTicket ? (
-              <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-6 text-center space-y-4">
-                <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+              <div className="bg-[#F0F9F2] border border-[#CDEEDB] rounded-2xl p-8 text-center space-y-4">
+                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
                 <div>
-                  <h3 className="text-base font-bold text-emerald-900">
+                  <h3 className="text-xl font-bold text-[#1E293B]">
                     Statutory Objection Registered Successfully!
                   </h3>
                   <p className="text-xs text-slate-600 mt-1">
@@ -121,7 +127,7 @@ export const GrievanceModal: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-lg border border-emerald-200 inline-block font-mono text-lg font-extrabold text-[#0B3D66]">
+                <div className="bg-white px-6 py-3 rounded-xl border border-emerald-200 inline-block font-mono text-xl font-extrabold text-[#0D6832] shadow-xs">
                   {submittedTicket}
                 </div>
 
@@ -129,204 +135,253 @@ export const GrievanceModal: React.FC = () => {
                   SMS confirmation with hearing notice link dispatched to <strong>+91 {phone}</strong>.
                 </p>
 
-                <div className="pt-2">
+                <div className="pt-2 flex justify-center gap-3">
                   <button
                     onClick={() => {
                       setSubmittedTicket(null);
                       setActiveTab('track');
                     }}
-                    className="px-5 py-2 bg-[#0B3D66] text-white text-xs font-bold rounded-lg"
+                    className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
                   >
                     View Hearing Details
                   </button>
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmitGrievance} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Case Reference Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={caseId}
-                      onChange={(e) => setCaseId(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900 font-semibold"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Survey / Cadastral Plot No. <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={surveyNo}
-                      onChange={(e) => setSurveyNo(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900 font-semibold"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Claimant / Landowner Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={claimantName}
-                      onChange={(e) => setClaimantName(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] text-slate-900"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Mobile Number for SMS Notices <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900"
-                    />
-                  </div>
-                </div>
-
+              <form onSubmit={handleSubmitGrievance} className="space-y-6">
+                
+                {/* Section 1 */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Grievance / Objection Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] text-slate-900"
-                  >
-                    <option value="undervaluation_trees">Section 15: Omission / Undervaluation of Trees, Crops or Structures</option>
-                    <option value="boundary_dispute">Section 15: Discrepancy in Survey Boundary / Area Calculation</option>
-                    <option value="title_claim">Section 15: Title Dispute / Co-Sharer Apportionment Claim</option>
-                    <option value="solatium_delay">Section 77: Delay in Direct Benefit Transfer (PFMS DBT) Compensation</option>
-                    <option value="rr_housing">Section 31: R&amp;R Model Colony Housing Allotment Issue</option>
-                  </select>
-                </div>
+                  <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      1
+                    </div>
+                    <span className="font-bold text-sm text-[#1E293B]">Landowner &amp; Parcel Details</span>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Detailed Grounds of Objection / Grievance Statement <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    rows={4}
-                    required
-                    value={grievanceText}
-                    onChange={(e) => setGrievanceText(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] text-slate-900"
-                  />
-                </div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Case Reference Number <span className="text-rose-500 font-bold">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={caseId}
+                          onChange={(e) => setCaseId(e.target.value)}
+                          className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79] font-mono text-slate-900"
+                        />
+                      </div>
 
-                {/* Upload supporting documents */}
-                <div className="p-3 bg-slate-50 border border-dashed border-slate-300 rounded-lg flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Upload className="w-4 h-4 text-slate-500" />
-                    <div>
-                      <div className="text-xs font-semibold text-slate-700">Attach Evidentiary Documents (7/12 Extract, Photo Proof)</div>
-                      <div className="text-[10px] text-slate-400">PDF, JPG up to 10 MB</div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Survey / Cadastral Plot No. <span className="text-rose-500 font-bold">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={surveyNo}
+                          onChange={(e) => setSurveyNo(e.target.value)}
+                          className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79] font-mono text-slate-900"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Claimant / Landowner Name <span className="text-rose-500 font-bold">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={claimantName}
+                          onChange={(e) => setClaimantName(e.target.value)}
+                          className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79] text-slate-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                          Mobile Number for SMS Notices <span className="text-rose-500 font-bold">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79] font-mono text-slate-900"
+                        />
+                      </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Section 2 */}
+                <div>
+                  <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                      2
+                    </div>
+                    <span className="font-bold text-sm text-[#1E293B]">Objection Category &amp; Evidence</span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Grievance / Objection Category <span className="text-rose-500 font-bold">*</span>
+                      </label>
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79] text-slate-900 cursor-pointer"
+                      >
+                        <option value="undervaluation_trees">Section 15: Omission / Undervaluation of Trees, Crops or Structures</option>
+                        <option value="boundary_dispute">Section 15: Discrepancy in Survey Boundary / Area Calculation</option>
+                        <option value="title_claim">Section 15: Title Dispute / Co-Sharer Apportionment Claim</option>
+                        <option value="solatium_delay">Section 77: Delay in Direct Benefit Transfer (PFMS DBT) Compensation</option>
+                        <option value="rr_housing">Section 31: R&amp;R Model Colony Housing Allotment Issue</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                        Detailed Grounds of Objection / Statement <span className="text-rose-500 font-bold">*</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        required
+                        value={grievanceText}
+                        onChange={(e) => setGrievanceText(e.target.value)}
+                        className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79] text-slate-900"
+                      />
+                    </div>
+
+                    {/* Upload */}
+                    <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Upload className="w-5 h-5 text-slate-500" />
+                        <div>
+                          <div className="text-xs font-semibold text-slate-700">Attach Evidentiary Documents (7/12 Extract, Photo Proof)</div>
+                          <div className="text-[11px] text-slate-400">PDF, JPG up to 10 MB</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => alert('7_12_Extract_Survey142_3A.pdf attached')}
+                        className="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-xs font-bold text-slate-700 rounded-lg shadow-2xs cursor-pointer"
+                      >
+                        Attach File
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() => alert('7_12_Extract_Survey142_3A.pdf attached')}
-                    className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-xs font-bold text-slate-700 rounded shadow-xs"
+                    onClick={handleReset}
+                    className="px-8 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
                   >
-                    Attach File
+                    Reset
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4 text-amber-300" />
+                    <span>Submit Statutory Objection</span>
                   </button>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors"
-                >
-                  <Send className="w-4 h-4 text-amber-300" />
-                  <span>Submit Statutory Objection (DARPG/CPGRAMS)</span>
-                </button>
               </form>
             )
           ) : (
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={trackTicketNumber}
-                  onChange={(e) => setTrackTicketNumber(e.target.value)}
-                  placeholder="Enter Grievance / CPGRAMS Token"
-                  className="flex-1 px-3 py-2 text-sm bg-white border border-slate-300 rounded font-mono font-bold"
-                />
-                <button
-                  onClick={() => alert('Refreshing status for ' + trackTicketNumber)}
-                  className="px-4 py-2 bg-[#0B3D66] text-white text-xs font-bold rounded"
-                >
-                  Track
-                </button>
+            <div className="space-y-6">
+              
+              {/* Section 1: Track */}
+              <div>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    1
+                  </div>
+                  <span className="font-bold text-sm text-[#1E293B]">Grievance Tracking Token</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={trackTicketNumber}
+                    onChange={(e) => setTrackTicketNumber(e.target.value)}
+                    placeholder="Enter Grievance / CPGRAMS Token"
+                    className="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-sm font-mono font-bold text-slate-800 focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79]"
+                  />
+                  <button
+                    onClick={() => alert('Refreshing status for ' + trackTicketNumber)}
+                    className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
+                  >
+                    Track Status
+                  </button>
+                </div>
               </div>
 
-              {/* Grievance Status Card */}
-              <div className="bg-[#F8FAFC] border border-slate-300 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              {/* Status Card */}
+              <div className="bg-white border border-slate-200/90 rounded-2xl p-6 space-y-4 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div>
                     <div className="text-xs text-slate-500 font-mono">TICKET #{trackingResult.ticket}</div>
-                    <h4 className="text-sm font-bold text-slate-900">
+                    <h4 className="text-base font-bold text-[#1E293B] mt-0.5">
                       Omission of 14 Alfonso Mango Trees &amp; Borewell
                     </h4>
                   </div>
-                  <span className="bg-amber-100 text-amber-900 text-xs font-bold px-2.5 py-1 rounded border border-amber-300 flex items-center gap-1">
+                  <span className="bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1 rounded-full border border-amber-300 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" /> Hearing Scheduled
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <span className="text-slate-500 block">Hearing Date &amp; Time:</span>
-                    <strong className="text-[#0B3D66] text-sm">{trackingResult.hearingDate}</strong>
+                    <span className="text-slate-500 block mb-0.5">Hearing Date &amp; Time:</span>
+                    <strong className="text-[#1E4D79] text-sm">{trackingResult.hearingDate}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Hearing Authority / Bench:</span>
+                    <span className="text-slate-500 block mb-0.5">Hearing Authority / Bench:</span>
                     <strong className="text-slate-900">{trackingResult.bench}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Assigned Officer:</span>
+                    <span className="text-slate-500 block mb-0.5">Assigned Officer:</span>
                     <strong className="text-slate-900">{trackingResult.assignedOfficer}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Filed On:</span>
+                    <span className="text-slate-500 block mb-0.5">Filed On:</span>
                     <strong className="text-slate-900">{trackingResult.filedDate}</strong>
                   </div>
                 </div>
 
-                <div className="bg-white p-3 rounded border border-slate-200 text-xs">
-                  <span className="font-bold text-slate-700 block mb-1">Competent Authority Remarks:</span>
-                  <p className="text-slate-600">{trackingResult.remarks}</p>
+                <div className="bg-[#F0F6FB] border border-[#D3E4F2] rounded-xl p-4 text-xs">
+                  <span className="font-bold text-[#1E3A5F] block mb-1">Competent Authority Remarks:</span>
+                  <p className="text-slate-700 leading-relaxed">{trackingResult.remarks}</p>
                 </div>
               </div>
+
+              {/* Bottom Close */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-[#1E4D79]" /> Grievance Helpline: <strong>1800-11-2026</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => closeModal('grievance')}
+                  className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
-          <div className="text-xs text-slate-500 flex items-center gap-1.5">
-            <Phone className="w-3.5 h-3.5 text-[#0B3D66]" /> Grievance Helpline: <strong>1800-11-2026</strong>
-          </div>
-          <button
-            onClick={() => closeModal('grievance')}
-            className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded"
-          >
-            Close
-          </button>
         </div>
 
       </div>

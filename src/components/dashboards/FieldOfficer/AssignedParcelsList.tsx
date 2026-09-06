@@ -1,6 +1,6 @@
 import React from 'react';
 import type { FieldParcel } from '../../../types';
-import { MapPin, Clock, Camera, CheckCircle2, AlertTriangle, ShieldCheck, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface AssignedParcelsListProps {
   parcels: FieldParcel[];
@@ -13,111 +13,114 @@ export const AssignedParcelsList: React.FC<AssignedParcelsListProps> = ({
   selectedParcelId,
   onSelectParcel,
 }) => {
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'VERIFIED': return { text: 'VERIFIED', className: 'gov-status-completed' };
+      case 'GPS_CAPTURED': return { text: 'GPS CAPTURED', className: 'gov-status-current' };
+      case 'OBJECTION_FLAGGED': return { text: 'OBJECTION', className: 'gov-status-critical' };
+      default: return { text: 'PENDING', className: 'gov-status-pending' };
+    }
+  };
+
+  const getPriorityText = (urgency: string) => {
+    switch (urgency) {
+      case 'HIGH': return { text: 'HIGH', className: 'gov-status-critical' };
+      case 'MEDIUM': return { text: 'MEDIUM', className: 'gov-status-current' };
+      default: return { text: 'LOW', className: 'gov-status-pending' };
+    }
+  };
+
   return (
-    <div className="gov-card p-6 flex flex-col justify-between h-full">
+    <div style={{ border: '1px solid #CBD5E1', borderRadius: '2px', backgroundColor: '#FFFFFF' }}>
       {/* Panel Header */}
-      <div>
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-          <div>
-            <span className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider block">
-              Today's Field Roster
-            </span>
-            <h3 className="text-lg font-bold text-[#0B3D66] font-sans mt-0.5">
-              Assigned Cadastral Parcels
-            </h3>
+      <div className="gov-register-header" style={{ margin: '0', padding: '10px 14px 8px' }}>
+        <div className="reg-meta">TODAY&apos;S FIELD ROSTER &bull; DGPS ACTIVE</div>
+        <div className="reg-title">Assigned Cadastral Parcels</div>
+      </div>
+
+      {/* Parcel Register Table */}
+      <div style={{ maxHeight: '760px', overflowY: 'auto', overflowX: 'auto' }}>
+        {parcels.length > 0 ? (
+          <table className="gov-stage-register" style={{ tableLayout: 'fixed', width: '100%', minWidth: '800px' }}>
+            <colgroup>
+              <col style={{ width: '85px' }} />
+              <col style={{ width: '140px' }} />
+              <col style={{ width: '160px' }} />
+              <col style={{ width: '80px' }} />
+              <col style={{ width: '60px' }} />
+              <col style={{ width: '60px' }} />
+              <col style={{ width: '105px' }} />
+              <col style={{ width: '80px' }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th style={{ width: '85px' }}>Survey #</th>
+                <th style={{ width: '140px' }}>Owner</th>
+                <th style={{ width: '160px' }}>Village / Area</th>
+                <th style={{ width: '80px' }}>Priority</th>
+                <th style={{ width: '60px' }}>SLA</th>
+                <th style={{ width: '60px', textAlign: 'center' }}>Photos</th>
+                <th style={{ width: '105px' }}>Status</th>
+                <th style={{ width: '80px', textAlign: 'center' }}>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {parcels.map((parcel) => {
+                const isSelected = parcel.id === selectedParcelId;
+                const status = getStatusText(parcel.verificationStatus);
+                const priority = getPriorityText(parcel.urgency);
+
+                return (
+                  <tr
+                    key={parcel.id}
+                    onClick={() => onSelectParcel(parcel)}
+                    style={{
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? '#EFF6FF' : undefined,
+                      borderLeft: isSelected ? '3px solid #0B3D66' : undefined,
+                    }}
+                  >
+                    <td style={{ fontWeight: 700, color: '#0B3D66', fontSize: '14px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                      #{parcel.surveyNumber}
+                    </td>
+                    <td style={{ verticalAlign: 'middle', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={parcel.ownerName}>
+                      <strong style={{ color: '#1E293B', fontSize: '14.5px' }}>{parcel.ownerName}</strong>
+                    </td>
+                    <td
+                      style={{ fontSize: '13px', verticalAlign: 'middle', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      title={`${parcel.village} • ${parcel.areaAcre} Ac (${parcel.category})`}
+                    >
+                      {parcel.village} &bull; {parcel.areaAcre} Ac ({parcel.category})
+                    </td>
+                    <td style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}><span className={priority.className}>{priority.text}</span></td>
+                    <td style={{ fontSize: '13px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{parcel.dueHours}h</td>
+                    <td style={{ textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap', fontSize: '13px' }}>{parcel.photos.length}</td>
+                    <td style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}><span className={status.className}>{status.text}</span></td>
+                    <td style={{ textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectParcel(parcel);
+                        }}
+                        className="gov-flat-btn gov-flat-btn-secondary"
+                        style={{ fontSize: '12px', padding: '3px 10px', height: '26px' }}
+                      >
+                        {isSelected ? 'Active' : 'Inspect'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94A3B8' }}>
+            <AlertCircle style={{ width: '24px', height: '24px', margin: '0 auto 6px', display: 'block', color: '#CBD5E1' }} />
+            <div style={{ fontWeight: 700, fontSize: '13px', color: '#475569' }}>No parcels match filter</div>
+            <div style={{ fontSize: '12px', marginTop: '4px' }}>Try a different Survey #, Landowner Name, or Status.</div>
           </div>
-          <span className="gov-badge gov-badge-success">
-            DGPS ACTIVE
-          </span>
-        </div>
-
-        {/* Parcel Roster List */}
-        <div className="space-y-3 max-h-[760px] overflow-y-auto pr-1">
-          {parcels.length > 0 ? (
-            parcels.map((parcel) => {
-              const isSelected = parcel.id === selectedParcelId;
-
-              const getStatusBadge = () => {
-                switch (parcel.verificationStatus) {
-                  case 'VERIFIED':
-                    return <span className="gov-badge gov-badge-success">VERIFIED</span>;
-                  case 'GPS_CAPTURED':
-                    return <span className="gov-badge gov-badge-info">GPS CAPTURED</span>;
-                  case 'OBJECTION_FLAGGED':
-                    return <span className="gov-badge gov-badge-critical">OBJECTION FLAGGED</span>;
-                  default:
-                    return <span className="gov-badge gov-badge-warning">PENDING SURVEY</span>;
-                }
-              };
-
-              const getPriorityBadge = () => {
-                switch (parcel.urgency) {
-                  case 'HIGH':
-                    return <span className="gov-badge gov-badge-critical text-[10px]">HIGH</span>;
-                  case 'MEDIUM':
-                    return <span className="gov-badge gov-badge-warning text-[10px]">MEDIUM</span>;
-                  default:
-                    return <span className="gov-badge gov-badge-neutral text-[10px]">LOW</span>;
-                }
-              };
-
-              return (
-                <button
-                  key={parcel.id}
-                  onClick={() => onSelectParcel(parcel)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all ${
-                    isSelected
-                      ? 'border-2 border-[#1D4ED8] bg-[#EFF6FF] shadow-xs'
-                      : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300'
-                  }`}
-                >
-                  {/* Row 1: Survey Number + Priority + Due Hours */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-mono font-bold text-sm text-[#0B3D66]">
-                      Survey #{parcel.surveyNumber}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      {getPriorityBadge()}
-                      <span className="text-xs font-mono text-slate-500 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-slate-400" />
-                        {parcel.dueHours}h SLA
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Row 2: Landowner & Village Details */}
-                  <div className="mb-3">
-                    <div className="text-sm font-bold text-slate-900 leading-snug">
-                      {parcel.ownerName}
-                    </div>
-                    <div className="text-xs text-slate-600 mt-1">
-                      {parcel.village} • <strong className="text-slate-800 font-mono">{parcel.areaAcre} Acres</strong> ({parcel.category})
-                    </div>
-                  </div>
-
-                  {/* Row 3: Status Chip & Attached Evidence Count */}
-                  <div className="flex items-center justify-between pt-2.5 border-t border-slate-200/80 text-xs">
-                    <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-                      <Camera className="w-3.5 h-3.5 text-[#1D4ED8]" />
-                      <span>{parcel.photos.length} Photos</span>
-                    </div>
-
-                    {getStatusBadge()}
-                  </div>
-                </button>
-              );
-            })
-          ) : (
-            <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-              <AlertCircle className="w-7 h-7 text-slate-400 mx-auto mb-2" />
-              <p className="font-bold text-sm text-slate-700">No parcels match filter</p>
-              <p className="text-xs text-slate-500 mt-1">
-                Try searching a different Survey #, Landowner Name, or Status.
-              </p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

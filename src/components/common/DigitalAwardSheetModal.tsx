@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRole } from '../../context/RoleContext';
 import { useModals } from '../../context/ModalContext';
 import {
@@ -12,17 +13,24 @@ import {
   Lock,
   Building,
   Sparkles,
+  ShieldAlert,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const DigitalAwardSheetModal: React.FC = () => {
   const { currentUser } = useRole();
   const { isModalOpen, closeModal } = useModals();
+  const navigate = useNavigate();
 
   const [isSigned, setIsSigned] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
 
   if (!isModalOpen('digitalAward')) return null;
+
+  const isAuthorized = currentUser && (
+    currentUser.role === 'district_officer' ||
+    currentUser.role === 'citizen'
+  );
 
   const handleSignWithDSC = () => {
     setIsSigning(true);
@@ -65,7 +73,80 @@ export const DigitalAwardSheetModal: React.FC = () => {
         </div>
 
         {/* Digital Document View Body */}
-        <div className="p-6 overflow-y-auto bg-slate-100 flex justify-center">
+        {!isAuthorized ? (
+          <div className="p-6 space-y-5 bg-slate-50 overflow-y-auto">
+            <div className="bg-rose-50 border-l-4 border-rose-600 p-4 rounded-r-lg flex items-start gap-3 shadow-xs">
+              <ShieldAlert className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-rose-950 uppercase tracking-wide">
+                  Access Restricted — Confidential Beneficiary Record
+                </h3>
+                <p className="text-xs text-rose-800 mt-0.5">
+                  Statutory Form 7 digital award sheets contain confidential land compensation records, solatium valuations, and Direct Benefit Transfer (DBT) bank credentials. Access is restricted to the specific landowner beneficiary or the Competent Authority for Land Acquisition (CALA).
+                </p>
+              </div>
+            </div>
+
+            <div className="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs">
+              <div className="bg-[#0B3D66] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-between">
+                <span>Statutory Privacy &amp; Entitlement Register</span>
+                <span className="text-[11px] font-mono text-amber-300 font-semibold">FORM SEC-403</span>
+              </div>
+              <table className="gov-stage-register">
+                <tbody>
+                  <tr>
+                    <th className="w-1/3">Authorized Beneficiary / Officer</th>
+                    <td className="font-bold text-[#0B3D66]">
+                      Registered Landowner Beneficiary (<span className="font-mono text-xs">citizen</span>) or District CALA Officer (<span className="font-mono text-xs">district_officer</span>)
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Current Session Status</th>
+                    <td>
+                      {currentUser ? (
+                        <span className="text-rose-700 font-bold">
+                          {currentUser.name} ({currentUser.roleTitle}) — <span className="underline">Unauthorized Role</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 font-bold italic">
+                          Unauthenticated Visitor (Session Inactive / Public Mode)
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Statutory Governance Rule</th>
+                    <td className="text-xs text-slate-700">
+                      Under Section 23/30 of RFCTLARR Act 2013 and Aadhaar Privacy Provisions, compensation award sheets are accessible exclusively to verified awardees and the sanctioning Collector/CALA.
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Remedial Action</th>
+                    <td className="flex items-center gap-3 py-3">
+                      <button
+                        onClick={() => {
+                          closeModal('digitalAward');
+                          navigate('/login');
+                        }}
+                        className="bg-[#0B3D66] hover:bg-[#072742] text-white font-bold px-4 py-1.5 rounded text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Log In as Citizen / CALA Officer</span>
+                      </button>
+                      <button
+                        onClick={() => closeModal('digitalAward')}
+                        className="px-3 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
+                      >
+                        Cancel &amp; Return
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 overflow-y-auto bg-slate-100 flex justify-center">
           
           {/* Printable Gazette Paper Container */}
           <div className="bg-white w-full max-w-2xl p-8 rounded-lg shadow-md border border-slate-300 relative font-serif text-slate-900 space-y-5">
@@ -202,9 +283,11 @@ export const DigitalAwardSheetModal: React.FC = () => {
           </div>
 
         </div>
+        )}
 
         {/* Footer Actions */}
-        <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        {isAuthorized && (
+          <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {!isSigned ? (
               <button
@@ -243,6 +326,7 @@ export const DigitalAwardSheetModal: React.FC = () => {
             </button>
           </div>
         </div>
+        )}
 
       </div>
     </div>

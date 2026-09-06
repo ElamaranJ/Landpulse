@@ -41,39 +41,32 @@ export const BrutalistCaseTable: React.FC<BrutalistCaseTableProps> = ({
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusBadge = (status?: string) => {
+  const getStatusText = (status?: string) => {
     switch (status) {
       case 'AWARDED':
-        return <span className="gov-badge gov-badge-warning">AWARD PUBLISHED</span>;
+        return <span className="gov-status-current">Award Published</span>;
       case 'COMPLETED':
-        return <span className="gov-badge gov-badge-success">POSSESSION TAKEN</span>;
+        return <span className="gov-status-completed">Possession Taken</span>;
       case 'OBJECTION_PENDING':
-        return <span className="gov-badge gov-badge-critical">SEC-15 OBJECTION</span>;
+        return <span className="gov-status-critical">Sec-15 Objection</span>;
       case 'PENDING_SURVEY':
-        return <span className="gov-badge gov-badge-info">SURVEY PENDING</span>;
+        return <span className="gov-status-pending">Survey Pending</span>;
       case 'IN_PROGRESS':
-        return <span className="gov-badge gov-badge-info">IN PROGRESS (SIA)</span>;
+        return <span className="gov-status-current">In Progress (SIA)</span>;
       case 'DELAYED':
-        return <span className="gov-badge gov-badge-critical">COURT STAY</span>;
+        return <span className="gov-status-critical">Court Stay</span>;
       default:
-        return <span className="gov-badge gov-badge-neutral">{status || 'PENDING'}</span>;
+        return <span className="gov-status-pending">{status || 'Pending'}</span>;
     }
   };
 
   return (
-    <div className="gov-card p-6 sm:p-7 mb-8">
+    <div style={{ border: '1px solid #CBD5E1', borderRadius: '2px', backgroundColor: '#FFFFFF', padding: '14px 16px', marginBottom: '12px' }}>
       {/* Table Title & Metadata Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-100 mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4" style={{ paddingBottom: '8px', marginBottom: '10px', borderBottom: '2px solid #0B3D66' }}>
         <div>
-          <div className="flex items-center gap-2.5">
-            <h3 className="text-lg sm:text-xl font-bold text-[#0B3D66] font-sans tracking-tight">
-              Palghar Division — Cadastral Land Acquisition Ledger
-            </h3>
-            <span className="gov-badge gov-badge-success">NIC REVENUE SYNC</span>
-          </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Statutory records under Section 4(1), 15, 19, &amp; 23 of RFCTLARR Act 2013
-          </p>
+          <div style={{ fontSize: '12px', color: '#64748B', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>PALGHAR DIVISION &bull; NIC REVENUE SYNC &bull; RFCTLARR ACT 2013</div>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: '#0B3D66' }}>Cadastral Land Acquisition Ledger</div>
         </div>
 
         {/* If no external cases prop is supplied, show fallback toolbar */}
@@ -108,17 +101,27 @@ export const BrutalistCaseTable: React.FC<BrutalistCaseTableProps> = ({
 
       {/* Modern Government Table with High Contrast */}
       <div className="gov-table-wrapper overflow-x-auto">
-        <table className="gov-table">
+        <table className="gov-stage-register" style={{ tableLayout: 'fixed', width: '100%', minWidth: '1080px' }}>
+          <colgroup>
+            <col style={{ width: '115px' }} />
+            <col style={{ width: 'auto' }} />
+            <col style={{ width: '125px' }} />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '140px' }} />
+            <col style={{ width: '135px' }} />
+            <col style={{ width: '110px' }} />
+            <col style={{ width: '140px' }} />
+          </colgroup>
           <thead>
             <tr>
-              <th>Survey / UID</th>
+              <th style={{ width: '115px' }}>Survey / UID</th>
               <th>Landowner &amp; Village</th>
-              <th>Area / Classification</th>
-              <th>Statutory Section</th>
-              <th>Status Stamp</th>
-              <th>SLAO Signoff</th>
-              <th className="text-right">Award Valuation</th>
-              <th className="text-right">Action Protocol</th>
+              <th style={{ width: '125px' }}>Area / Type</th>
+              <th style={{ width: '120px' }}>Section</th>
+              <th style={{ width: '140px' }}>Status</th>
+              <th style={{ width: '135px' }}>Signoff</th>
+              <th style={{ width: '110px', textAlign: 'right' }}>Valuation</th>
+              <th style={{ width: '140px', textAlign: 'center' }}>Details</th>
             </tr>
           </thead>
           <tbody>
@@ -126,64 +129,68 @@ export const BrutalistCaseTable: React.FC<BrutalistCaseTableProps> = ({
               displayCases.map((row) => (
                 <tr key={row.id}>
                   {/* Survey No */}
-                  <td className="font-mono">
-                    <div className="font-bold text-[#0B3D66] text-sm">
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <div style={{ fontWeight: 700, color: '#0B3D66', fontSize: '14.5px' }}>
                       #{row.surveyNo}
                     </div>
-                    <span className="text-xs text-slate-400 block mt-0.5">{row.id}</span>
+                    <span style={{ fontSize: '12.5px', color: '#94A3B8' }}>{row.id}</span>
                   </td>
 
                   {/* Owner & Village */}
-                  <td>
-                    <div className="font-bold text-slate-900 text-sm font-sans">{row.owner}</div>
-                    <span className="text-xs text-slate-500 font-mono block mt-0.5">
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '15px' }}>{row.owner}</div>
+                    <span style={{ fontSize: '13px', color: '#64748B' }}>
                       {row.village} • Aadhaar Seeded
                     </span>
                   </td>
 
                   {/* Area & Type */}
-                  <td className="font-mono">
-                    <span className="text-emerald-700 font-bold">{row.area}</span>
-                    <span className="text-slate-500 block text-xs mt-0.5">({row.category})</span>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <span style={{ color: '#047857', fontWeight: 700, fontSize: '14.5px' }}>{row.area}</span>
+                    <span style={{ color: '#64748B', display: 'block', fontSize: '12.5px' }}>({row.category})</span>
                   </td>
 
                   {/* Statutory Section */}
-                  <td className="font-mono text-slate-700">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-bold">
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <span style={{ fontSize: '13.5px', color: '#334155', fontWeight: 600 }}>
                       {row.stage}
                     </span>
                   </td>
 
-                  {/* Status Badge */}
-                  <td>{getStatusBadge(row.status)}</td>
+                  {/* Status Text */}
+                  <td style={{ verticalAlign: 'middle' }}>{getStatusText(row.status)}</td>
 
                   {/* SLAO Authority */}
-                  <td className="font-mono text-xs text-slate-600">
-                    <span className="text-slate-800 block font-semibold">Dy. Collector (LA)</span>
-                    <span className="text-emerald-700 font-bold">DSC Verified ✓</span>
+                  <td style={{ verticalAlign: 'middle', fontSize: '13.5px' }}>
+                    <span style={{ color: '#1E293B', display: 'block', fontWeight: 600 }}>Dy. Collector</span>
+                    <span style={{ color: '#059669', fontWeight: 700, fontSize: '12.5px' }}>DSC Signed ✓</span>
                   </td>
 
                   {/* Valuation */}
-                  <td className="text-right font-mono font-bold text-[#EA580C] text-sm">
+                  <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '14.5px', color: '#0F172A', verticalAlign: 'middle' }}>
                     {row.amountCr}
                   </td>
 
                   {/* Action Trigger */}
-                  <td className="text-right font-mono">
+                  <td style={{ textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                     {row.status === 'AWARDED' ? (
                       <button
+                        type="button"
                         onClick={() => onOpenDisbursementModal(row)}
-                        className="h-9 px-3.5 rounded-lg bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold uppercase inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                        className="gov-flat-btn gov-flat-btn-orange"
+                        style={{ fontSize: '12px', padding: '4px 10px', width: '126px', height: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                       >
-                        <Landmark className="w-3.5 h-3.5" />
+                        <Landmark className="w-4 h-4" />
                         <span>{row.actionRequired}</span>
                       </button>
                     ) : (
                       <button
+                        type="button"
                         onClick={onViewCitizenView}
-                        className="h-9 px-3.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-[#0B3D66] text-xs font-bold uppercase inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                        className="gov-flat-btn gov-flat-btn-secondary"
+                        style={{ fontSize: '12px', padding: '4px 10px', width: '126px', height: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
                       >
-                        <Eye className="w-3.5 h-3.5" />
+                        <Eye className="w-4 h-4" />
                         <span>Inspect Dossier</span>
                       </button>
                     )}
@@ -206,7 +213,7 @@ export const BrutalistCaseTable: React.FC<BrutalistCaseTableProps> = ({
       </div>
 
       {/* Pagination & Ledger Metadata Footer */}
-      <div className="pt-4 mt-4 flex flex-wrap items-center justify-between text-xs text-slate-600 font-mono gap-3 border-t border-slate-100">
+      <div className="pt-3 mt-3 flex flex-wrap items-center justify-between text-xs text-slate-600 font-mono gap-3" style={{ borderTop: '1px solid #CBD5E1' }}>
         <div className="flex items-center gap-4">
           <span>
             Showing <strong>1–{displayCases.length}</strong> of{' '}
@@ -221,17 +228,17 @@ export const BrutalistCaseTable: React.FC<BrutalistCaseTableProps> = ({
         <div className="flex items-center gap-1.5">
           <button
             disabled={currentPage === 1}
-            className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 disabled:opacity-40 hover:bg-slate-50"
+            style={{ width: '28px', height: '28px', borderRadius: '2px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: currentPage === 1 ? 0.4 : 1 }}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="px-3 py-1 rounded-lg bg-[#0B3D66] text-white font-bold text-xs">
+          <span style={{ padding: '2px 10px', borderRadius: '2px', backgroundColor: '#0B3D66', color: '#FFFFFF', fontWeight: 700, fontSize: '12px' }}>
             1
           </span>
           <span className="px-1 text-slate-400">/ 1</span>
           <button
             disabled={true}
-            className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 disabled:opacity-40 hover:bg-slate-50"
+            style={{ width: '28px', height: '28px', borderRadius: '2px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.4 }}
           >
             <ChevronRight className="w-4 h-4" />
           </button>

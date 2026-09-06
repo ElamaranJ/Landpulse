@@ -6,6 +6,7 @@ export type RoleType =
   | 'field_officer' 
   | 'officer_inspections'
   | 'district_officer' 
+  | 'project_admin'
   | 'intelligence_layer'
   | 'acts'
   | 'rti'

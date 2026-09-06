@@ -8,36 +8,36 @@ export const GovHeroBanner: React.FC = () => {
   const slides = [
     [
       {
-        url: "https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=1200&auto=format&fit=crop&q=80",
-        fallback: "https://picsum.photos/seed/expressway-corridor/1200/800",
+        url: "/images/hero-expressway.jpg",
+        fallback: "/images/hero-expressway.jpg",
         caption: "PM inaugurates new Greenfield Expressway Corridor & Compensation Award Ceremony",
       },
       {
-        url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?w=1200&auto=format&fit=crop&q=80",
-        fallback: "https://picsum.photos/seed/freight-terminal/1200/800",
+        url: "/images/hero-gatishakti.jpg",
+        fallback: "/images/hero-gatishakti.jpg",
         caption: "Multi-Modal Freight Logistic Terminal Fleet Flagoff — PM GatiShakti NMP",
       },
       {
-        url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1200&auto=format&fit=crop&q=80",
-        fallback: "https://picsum.photos/seed/dgps-survey/1200/800",
+        url: "/images/hero-dgps-survey.jpg",
+        fallback: "/images/hero-dgps-survey.jpg",
         caption: "High-Precision NavIC DGPS Cadastral Land Survey Launch for Western DFC",
       },
     ],
     [
       {
-        url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=1200&auto=format&fit=crop&q=80",
-        fallback: "https://picsum.photos/seed/compensation-ceremony/1200/800",
-        caption: "Direct Benefit Transfer (DBT) PFMS Compensation Disbursement to 4,800 Landowners",
+        url: "/images/hero-cadastral-parcels.jpg",
+        fallback: "/images/hero-cadastral-parcels.jpg",
+        caption: "Satellite & Drone Cadastral Land Parcel Digitization & Boundary Verification",
       },
       {
-        url: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1200&auto=format&fit=crop&q=80",
-        fallback: "https://picsum.photos/seed/housing-township/1200/800",
-        caption: "Model R&R Township Infrastructure & Housing Allotment Ceremony",
+        url: "/images/hero-expressway.jpg",
+        fallback: "/images/hero-expressway.jpg",
+        caption: "Greenfield Access-Controlled Multi-Modal Connectivity Network",
       },
       {
-        url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&auto=format&fit=crop&q=80",
-        fallback: "https://picsum.photos/seed/infrastructure-council/1200/800",
-        caption: "State High-Level Infrastructure Land Coordination Council Meeting",
+        url: "/images/hero-gatishakti.jpg",
+        fallback: "/images/hero-gatishakti.jpg",
+        caption: "PM GatiShakti National Master Plan — Unified Logistics & Land Clearance",
       },
     ],
   ];
@@ -60,7 +60,7 @@ export const GovHeroBanner: React.FC = () => {
             />
             {/* Caption strip */}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-5 sm:p-6 z-10">
-              <p className="text-base sm:text-lg font-sans font-semibold text-white line-clamp-2 drop-shadow-md">
+              <p className="text-lg sm:text-xl lg:text-[22px] font-sans font-bold text-white line-clamp-2 drop-shadow-md leading-snug">
                 {img.caption}
               </p>
             </div>

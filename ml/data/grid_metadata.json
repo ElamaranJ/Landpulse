@@ -1,0 +1,32 @@
+{
+  "grid_shape": [
+    200,
+    200
+  ],
+  "bounds": {
+    "min_lat": 19.65,
+    "max_lat": 19.8,
+    "min_lng": 72.75,
+    "max_lng": 72.9
+  },
+  "categories": [
+    "existing_road",
+    "wasteland",
+    "government_land",
+    "agricultural",
+    "forest",
+    "built_up",
+    "water_body"
+  ],
+  "land_costs": {
+    "existing_road": 0.6,
+    "wasteland": 1.0,
+    "government_land": 1.2,
+    "agricultural": 6.5,
+    "forest": 12.0,
+    "built_up": 18.0,
+    "water_body": 25.0
+  },
+  "cell_resolution_m": 110,
+  "disclaimer": "Synthetic cost surface for LandPulse route optimization demonstration."
+}

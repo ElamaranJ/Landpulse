@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Landmark,
 } from 'lucide-react';
+import { signInWithGoogle } from '../../../services/firebase';
 
 interface OfficialLoginTabProps {
   isLoading: boolean;
@@ -30,6 +31,9 @@ export const OfficialLoginTab: React.FC<OfficialLoginTabProps> = ({
   const [captchaError, setCaptchaError] = useState('');
   const [isSpeakingCaptcha, setIsSpeakingCaptcha] = useState(false);
 
+  const [serverError, setServerError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Generate random captcha code
   const refreshCaptcha = () => {
     const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -40,6 +44,7 @@ export const OfficialLoginTab: React.FC<OfficialLoginTabProps> = ({
     setCaptchaCode(code);
     setCaptchaInput('');
     setCaptchaError('');
+    setServerError('');
   };
 
   // Audio Captcha Text-To-Speech
@@ -57,31 +62,90 @@ export const OfficialLoginTab: React.FC<OfficialLoginTabProps> = ({
   };
 
   // Handle Form Submit
-  const handleOfficialSubmit = (e: React.FormEvent) => {
+  const handleOfficialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError('');
+
     if (captchaInput.trim().toUpperCase() !== captchaCode) {
       setCaptchaError('Incorrect Security Code. Please try again.');
       return;
     }
     setCaptchaError('');
 
-    const targetUser: AuthUser = {
-      ...DEFAULT_PERSONAS.command_center,
-      email: officialUsername || 'officer@gov.in',
-      loginTime: new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: officialUsername.trim(),
+          password: officialPassword,
+        }),
+      });
 
-    onSuccess(
-      targetUser,
-      'command_center',
-      `Welcome, ${targetUser.name}! Authenticated via Jan Parichay SSO.`
-    );
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setServerError(data.error || 'Authentication failed. Please verify credentials.');
+        return;
+      }
+
+      if (data.token) {
+        localStorage.setItem('landpulse_auth_token', data.token);
+      }
+
+      onSuccess(
+        data.user,
+        data.user.role as RoleType,
+        data.message || `Welcome, ${data.user.name}! Authenticated via Jan Parichay SSO.`
+      );
+    } catch (err) {
+      setServerError('Unable to reach authentication server. Please check network connection.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsSubmitting(true);
+    setServerError('');
+    try {
+      const res = await signInWithGoogle('command_center');
+      if (!res.success || !res.user) {
+        if (res.error) setServerError(res.error);
+        return;
+      }
+
+      const apiRes = await fetch('/api/auth/firebase-google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: res.user.email,
+          displayName: res.user.displayName,
+          photoURL: res.user.photoURL,
+          uid: res.user.uid,
+          preferredRole: 'command_center',
+        }),
+      });
+
+      const data = await apiRes.json();
+      if (data.success && data.user) {
+        if (data.token) {
+          localStorage.setItem('landpulse_auth_token', data.token);
+        }
+        onSuccess(
+          data.user,
+          (data.user.role as RoleType) || 'command_center',
+          data.message || `Welcome, ${data.user.name}! Authenticated via Google.`
+        );
+      } else {
+        setServerError(data.error || 'Google authentication failed.');
+      }
+    } catch {
+      setServerError('Error during Google authentication.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -190,17 +254,24 @@ export const OfficialLoginTab: React.FC<OfficialLoginTabProps> = ({
             <AlertTriangle className="w-3 h-3" /> {captchaError}
           </p>
         )}
+
+        {serverError && (
+          <div className="p-2.5 bg-red-50 border border-red-200 rounded text-xs text-red-700 font-medium flex items-center gap-1.5">
+            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{serverError}</span>
+          </div>
+        )}
       </div>
 
       {/* Primary Action Button */}
       <div className="pt-2 space-y-3">
         <button
           type="submit"
-          disabled={isLoading}
-          className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors"
+          disabled={isLoading || isSubmitting}
+          className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded-[2px] font-bold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
         >
           <Lock className="w-4 h-4 text-amber-300" />
-          <span>{isLoading ? 'Verifying Credentials...' : 'Sign In as Officer'}</span>
+          <span>{isLoading || isSubmitting ? 'Verifying Credentials...' : 'Sign In as Officer'}</span>
         </button>
 
         <div className="flex items-center gap-3 pt-1">
@@ -209,14 +280,34 @@ export const OfficialLoginTab: React.FC<OfficialLoginTabProps> = ({
           <div className="h-px flex-1 bg-slate-200" />
         </div>
 
-        {/* MeriPehchan National SSO Option */}
+        {/* Sign In with Google */}
         <button
           type="button"
-          onClick={() => onPersonaLogin('command_center')}
-          className="w-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 py-2 px-3 rounded text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+          disabled={isLoading || isSubmitting}
+          onClick={handleGoogleLogin}
+          className="w-full bg-[#4285F4] hover:bg-[#3367D6] active:bg-[#2A56C6] text-white p-1 pr-4 rounded-lg font-medium text-xs flex items-center shadow-[0_2px_8px_rgba(66,133,244,0.35)] transition-all cursor-pointer disabled:opacity-50"
         >
-          <Landmark className="w-3.5 h-3.5 text-[#0B3D66]" />
-          <span>Sign in with MeriPehchan / Jan Parichay SSO</span>
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-xs">
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.29 21.36 7.37 24 12 24z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.29 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+              />
+            </svg>
+          </div>
+          <span className="flex-1 text-center font-bold text-sm tracking-wide text-white">Sign in with Google</span>
         </button>
       </div>
     </form>

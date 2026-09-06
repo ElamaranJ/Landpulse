@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { GovTopBar } from './GovTopBar';
 import { GovFooter } from './GovFooter';
 import { useRole } from '../../context/RoleContext';
@@ -21,18 +22,32 @@ interface GovShellProps {
 
 export const GovShell: React.FC<GovShellProps> = ({ children }) => {
   const { currentRole } = useRole();
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+
+  // Dedicated standalone layout for Login page (no navbar, no standard footer)
+  if (isLoginPage) {
+    return (
+      <div className="min-h-screen w-full flex flex-col font-sans">
+        <main className="flex-1 w-full">
+          {children}
+        </main>
+        <SiteMapPolicyModals />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] text-[#0F172A] flex flex-col font-sans">
+    <div className="min-h-screen w-full bg-[#F4F6F9] text-[#1E293B] flex flex-col font-sans">
       {/* 1. Official Topmost Utility Strip, Header & Navigation */}
       <GovTopBar />
 
-      {/* 2. Main Content Workspace with Generous Breathing Room */}
+      {/* 2. Main Content Workspace with Standard Government Density */}
       <main id="main-content" className="flex-1 w-full">
         {currentRole === 'home' ? (
           children
         ) : (
-          <div className="w-full max-w-[1920px] mx-auto px-6 sm:px-12 2xl:px-20 py-8 sm:py-10">
+          <div className="gov-register-page w-full max-w-[1920px] mx-auto px-4 sm:px-8 2xl:px-14 py-4 sm:py-6">
             {children}
           </div>
         )}

@@ -1,106 +1,194 @@
-import React from 'react';
-import { ShieldAlert, Cpu, AlertTriangle, CheckCircle2, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { predictRisk, fetchModelInfo, RiskPredictionFeatures } from '../../../services/api';
 
-interface GaugeProps {
-  score: number;
-  label: string;
+interface GaugeItem {
   category: string;
-  color: string;
+  label: string;
+  score: number;
   badge: string;
-  badgeClass: string;
+  features: RiskPredictionFeatures;
 }
 
-const SimpleGauge: React.FC<GaugeProps> = ({ score, label, category, color, badge, badgeClass }) => {
-  return (
-    <div className="gov-card p-6 flex flex-col justify-between">
-      <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3 font-mono">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{category}</span>
-          <span className={`gov-badge ${badgeClass}`}>{badge}</span>
-        </div>
-
-        <div className="my-3">
-          <div className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight" style={{ color }}>
-            {score} <span className="text-base text-slate-400 font-sans font-normal">/ 100</span>
-          </div>
-          <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200 mt-3">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${score}%`, backgroundColor: color }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <h5 className="font-bold text-sm text-[#0B3D66] font-sans mt-2 line-clamp-2 leading-snug">
-        {label}
-      </h5>
-    </div>
-  );
-};
+const INITIAL_GAUGES: GaugeItem[] = [
+  {
+    category: 'Litigation Risk',
+    label: 'High Court & Tribunal Stay Orders on Title',
+    score: 84,
+    badge: 'CRITICAL',
+    features: {
+      district: 'Palghar',
+      stage_duration_days: 180,
+      has_dispute: 1,
+      objection_count: 6,
+      project_category: 'Highways',
+      owner_count: 8,
+      area_acres: 42
+    }
+  },
+  {
+    category: 'Forest Clearance',
+    label: 'MoEFCC Stage-II & Wildlife Sanctuary Clearance',
+    score: 68,
+    badge: 'HIGH',
+    features: {
+      district: 'Panna',
+      stage_duration_days: 140,
+      has_dispute: 0,
+      objection_count: 4,
+      project_category: 'Water',
+      owner_count: 5,
+      area_acres: 110
+    }
+  },
+  {
+    category: 'Budget Liquidity',
+    label: 'Circle Rate Escalation & Solatium Budget',
+    score: 42,
+    badge: 'MODERATE',
+    features: {
+      district: 'Gautam Buddha Nagar',
+      stage_duration_days: 75,
+      has_dispute: 0,
+      objection_count: 2,
+      land_category: 'commercial',
+      owner_count: 3,
+      area_acres: 15
+    }
+  },
+  {
+    category: 'Rehabilitation Sync',
+    label: 'Township & Resettlement Model Infrastructure',
+    score: 28,
+    badge: 'ON TRACK',
+    features: {
+      district: 'Surat',
+      stage_duration_days: 35,
+      has_dispute: 0,
+      objection_count: 0,
+      owner_count: 2,
+      area_acres: 6
+    }
+  },
+];
 
 export const RiskGauges: React.FC = () => {
-  return (
-    <div className="gov-card p-6 sm:p-8 mb-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 mb-6">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-700 flex items-center justify-center border border-orange-200">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-[#0B3D66] font-sans tracking-tight">
-              AI Composite Risk Engine &amp; Predictive Telemetry
-            </h3>
-            <span className="gov-badge gov-badge-warning">
-              MACHINE TELEMETRY
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Cross-ministry predictive model across 1,248 projects, High Court dockets, and revenue records
-          </p>
-        </div>
+  const [gauges, setGauges] = useState<GaugeItem[]>(INITIAL_GAUGES);
+  const [modelConfidence, setModelConfidence] = useState<number>(89.4);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-        <span className="gov-badge gov-badge-success text-xs py-1 px-3 self-start sm:self-auto">
-          Model Confidence: 94.8% (NIC Core AI)
-        </span>
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPredictions() {
+      setIsLoading(true);
+
+      // 1. Fetch live model test accuracy
+      try {
+        const info = await fetchModelInfo();
+        if (isMounted && info.accuracy) {
+          setModelConfidence(info.accuracy);
+        }
+      } catch {
+        // use default
+      }
+
+      // 2. Predict risk scores for each of the 4 gauge categories
+      try {
+        const updated = await Promise.all(
+          INITIAL_GAUGES.map(async (g) => {
+            try {
+              const res = await predictRisk(g.features);
+              let badge = res.riskLevel === 'MEDIUM' ? 'MODERATE' : res.riskLevel;
+              if (res.riskScore < 35) badge = 'ON TRACK';
+
+              return {
+                ...g,
+                score: res.riskScore,
+                badge
+              };
+            } catch {
+              return g;
+            }
+          })
+        );
+
+        if (isMounted) {
+          setGauges(updated);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadPredictions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const getRiskClass = (score: number) => {
+    if (score >= 75) return 'gov-status-critical';
+    if (score >= 50) return 'gov-status-high';
+    if (score >= 35) return 'gov-status-current';
+    return 'gov-status-on-track';
+  };
+
+  return (
+    <div style={{ marginBottom: '12px' }}>
+      <div className="gov-register-header">
+        <div className="reg-meta">
+          INTELLIGENCE LAYER &bull; NIC CORE AI &bull; MODEL CONFIDENCE: {modelConfidence.toFixed(1)}%
+          {isLoading && <span style={{ marginLeft: '8px', color: '#94A3B8' }}>(updating telemetry...)</span>}
+        </div>
+        <div className="reg-title">AI Composite Risk Engine &amp; Predictive Telemetry</div>
+        <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+          RandomForest ensemble trained on multi-sector statutory milestones, High Court dockets, and revenue objections
+        </div>
       </div>
 
-      {/* 4 Hero-Sized Risk Gauge Cards — 24px gap */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SimpleGauge
-          score={84}
-          label="High Court &amp; Tribunal Stay Orders on Title"
-          category="Litigation Risk"
-          color="#DC2626"
-          badge="CRITICAL"
-          badgeClass="gov-badge-critical"
-        />
-        <SimpleGauge
-          score={68}
-          label="MoEFCC Stage-II &amp; Wildlife Sanctuary Clearance"
-          category="Forest Clearance"
-          color="#EA580C"
-          badge="HIGH"
-          badgeClass="gov-badge-warning"
-        />
-        <SimpleGauge
-          score={42}
-          label="Circle Rate Escalation &amp; Solatium Budget"
-          category="Budget Liquidity"
-          color="#D97706"
-          badge="MODERATE"
-          badgeClass="gov-badge-warning"
-        />
-        <SimpleGauge
-          score={28}
-          label="Township &amp; Resettlement Model Infrastructure"
-          category="Rehabilitation Sync"
-          color="#059669"
-          badge="ON TRACK"
-          badgeClass="gov-badge-success"
-        />
+      <div style={{ overflowX: 'auto' }}>
+        <table className="gov-stage-register" style={{ tableLayout: 'fixed', width: '100%' }}>
+          <colgroup>
+            <col style={{ width: '170px' }} />
+            <col style={{ width: '90px' }} />
+            <col style={{ width: '110px' }} />
+            <col style={{ width: 'auto' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={{ width: '170px' }}>Risk Category</th>
+              <th style={{ width: '90px', textAlign: 'center' }}>Score</th>
+              <th style={{ width: '110px' }}>Risk Level</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              [1, 2, 3, 4].map((idx) => (
+                <tr key={idx} style={{ opacity: 0.6 }}>
+                  <td style={{ fontWeight: 700, color: '#0B3D66', verticalAlign: 'middle' }}>Loading...</td>
+                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: '13px', verticalAlign: 'middle' }}>-- / 100</td>
+                  <td style={{ verticalAlign: 'middle' }}><span className="gov-status-current">CALCULATING</span></td>
+                  <td style={{ fontSize: '12px', color: '#94A3B8', verticalAlign: 'middle' }}>Evaluating cross-ministry telemetry vector...</td>
+                </tr>
+              ))
+            ) : (
+              gauges.map((g) => (
+                <tr key={g.category}>
+                  <td style={{ fontWeight: 700, color: '#0B3D66', verticalAlign: 'middle' }}>{g.category}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 700, fontSize: '13px', verticalAlign: 'middle' }}>{g.score} / 100</td>
+                  <td style={{ verticalAlign: 'middle' }}><span className={getRiskClass(g.score)}>{g.badge}</span></td>
+                  <td style={{ fontSize: '12px', color: '#475569', verticalAlign: 'middle' }}>{g.label}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
+

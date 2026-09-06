@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { BrutalistBadge } from '../../common/BrutalistBadge';
-import { Landmark, ShieldCheck, X, CheckCircle2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Landmark, ShieldCheck, X, CheckCircle2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { CitizenCase } from '../../../types';
+import { detectCompensationAnomaly, CompensationAnomalyResult } from '../../../services/api';
 
 interface CompensationDisbursementModalProps {
   isOpen: boolean;
@@ -16,7 +16,43 @@ export const CompensationDisbursementModal: React.FC<CompensationDisbursementMod
 }) => {
   const [authorizing, setAuthorizing] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [trancheAmount, setTrancheAmount] = useState('91,20,000'); // ₹91.2 Lakh (Tranche 2)
+  const [trancheAmount, setTrancheAmount] = useState('91,20,000');
+  const [anomalyResult, setAnomalyResult] = useState<CompensationAnomalyResult | null>(null);
+  const [checkingAnomaly, setCheckingAnomaly] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !caseItem) {
+      setAnomalyResult(null);
+      return;
+    }
+
+    let isMounted = true;
+    setCheckingAnomaly(true);
+
+    const awardedCr = caseItem.awardedCompensationCr ?? caseItem.estimatedValuationCr ?? 1.2;
+    const area = caseItem.landAreaAcre ?? (caseItem.area ? parseFloat(caseItem.area) : 2.5);
+
+    detectCompensationAnomaly({
+      district: caseItem.district || 'Palghar',
+      land_category: caseItem.category || caseItem.landType || 'agricultural',
+      area_acres: isNaN(area) ? 2.0 : area,
+      awarded_compensation_cr: awardedCr,
+      owner_count: 1
+    })
+      .then((res) => {
+        if (isMounted) setAnomalyResult(res);
+      })
+      .catch(() => {
+        if (isMounted) setAnomalyResult(null);
+      })
+      .finally(() => {
+        if (isMounted) setCheckingAnomaly(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, caseItem]);
 
   if (!isOpen || !caseItem) return null;
 
@@ -33,112 +69,177 @@ export const CompensationDisbursementModal: React.FC<CompensationDisbursementMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-      <div className="relative w-full max-w-xl gov-card p-5 rounded-md border border-white/20 shadow-xl bg-[#090F1E] text-slate-100 font-sans">
-        {/* Close Button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: '540px',
+        backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '2px',
+      }}>
+        {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-white"
+          style={{ position: 'absolute', top: '12px', right: '12px', padding: '4px', cursor: 'pointer', color: '#64748B', background: 'none', border: 'none' }}
         >
-          <X className="w-4 h-4" />
+          <X style={{ width: '18px', height: '18px' }} />
         </button>
 
-        {/* Modal Header */}
-        <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-white/10">
-          <div className="w-9 h-9 rounded bg-orange-600/20 border border-orange-500/40 flex items-center justify-center text-orange-400">
-            <Landmark className="w-5 h-5" />
+        {/* Header */}
+        <div className="gov-register-header" style={{ margin: '20px 24px 0', paddingBottom: '8px' }}>
+          <div className="reg-meta" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Landmark style={{ width: '14px', height: '14px', color: '#EA580C' }} />
+            RFCTLARR 2013 &bull; PFMS DIRECT BENEFIT TRANSFER
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold font-grotesk tracking-tight text-white">
-                PFMS Treasury Direct Benefit Transfer (DBT) Authorization
-              </h3>
-              <BrutalistBadge label="SECTION 23 (RFCTLARR)" variant="saffron" size="sm" />
+          <div className="reg-title">Authorize Statutory Compensation Tranche</div>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: '16px 24px 20px' }}>
+          {/* Anomaly Detection Audit Banner */}
+          {checkingAnomaly && (
+            <div style={{
+              margin: '0 0 12px 0',
+              padding: '6px 10px',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #CBD5E1',
+              fontSize: '11px',
+              color: '#64748B',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <RefreshCw style={{ width: '12px', height: '12px', animation: 'spin 1s linear infinite' }} />
+              Verifying award valuation against district comparable parcel benchmarks...
             </div>
-            <p className="text-[11px] text-slate-400 font-mono">
-              Direct State Bank PFMS Gateway Settlement • Tranche 2 Disbursal
-            </p>
-          </div>
-        </div>
-
-        {/* Landowner Record Info */}
-        <div className="bg-black/40 border border-white/10 p-3 rounded mb-3 text-xs font-mono space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400">Cadastral Survey Parcel:</span>
-            <span className="text-white font-bold">
-              Survey #{caseItem.surveyNo} ({caseItem.village})
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400">Beneficiary Landowner:</span>
-            <span className="text-slate-200 font-sans font-bold">{caseItem.owner}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400">Aadhaar PFMS Validation:</span>
-            <span className="text-emerald-400 font-bold">XXXX-XXXX-8924 (VERIFIED)</span>
-          </div>
-        </div>
-
-        {/* Statutory Solatium Calculation Breakdown */}
-        <div className="space-y-1.5 text-xs mb-4 bg-white/5 p-3 rounded border border-white/10 font-mono">
-          <span className="text-[10px] uppercase text-slate-400 block font-bold">
-            Statutory Solatium & Multiplier Audit Breakdown
-          </span>
-          <div className="flex justify-between text-slate-300">
-            <span>Base Market Valuation (2.85 Acres):</span>
-            <span>₹ 42,00,000</span>
-          </div>
-          <div className="flex justify-between text-slate-300">
-            <span>Rural Area Multiplier (2.0x):</span>
-            <span>₹ 84,00,000</span>
-          </div>
-          <div className="flex justify-between text-slate-300">
-            <span>100% Solatium (Sec 30(1)):</span>
-            <span>₹ 84,00,000</span>
-          </div>
-          <div className="flex justify-between text-slate-300">
-            <span>Horticulture / Structure Assets (Form 7):</span>
-            <span>₹ 14,40,000</span>
-          </div>
-          <div className="flex justify-between text-emerald-400 font-bold pt-1.5 border-t border-white/10 text-xs">
-            <span>Tranche 2 Disbursal Due (50% Balance):</span>
-            <span>₹ {trancheAmount}</span>
-          </div>
-        </div>
-
-        {/* DSC Token & Gateway Status */}
-        <div className="flex items-center gap-2 text-xs text-emerald-400 mb-4 bg-emerald-950/20 border border-emerald-500/30 p-2.5 rounded font-mono">
-          <ShieldCheck className="w-4 h-4 shrink-0" />
-          <span>SLAO Digital Signature Token (Palghar Circle 04) Active & Seeded.</span>
-        </div>
-
-        {/* Authorize Button */}
-        <button
-          onClick={handleAuthorizePayment}
-          disabled={authorizing || success}
-          className={`w-full py-2.5 px-4 rounded font-mono font-bold text-xs uppercase flex items-center justify-center gap-2 border transition-all ${
-            success
-              ? 'bg-emerald-600 text-white border-emerald-500'
-              : 'btn-gov btn-gov-primary w-full'
-          }`}
-        >
-          {authorizing ? (
-            <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              <span>Signing DSC & Transmitting to PFMS Treasury Gateway...</span>
-            </>
-          ) : success ? (
-            <>
-              <CheckCircle2 className="w-4 h-4" />
-              <span>UTR Generated: SBIN24289012498 (₹ 91.2 Lakh Transferred)</span>
-            </>
-          ) : (
-            <>
-              <Landmark className="w-3.5 h-3.5" />
-              <span>Sign DSC & Authorize Tranche 2 Disbursal</span>
-            </>
           )}
-        </button>
+
+          {anomalyResult && anomalyResult.isAnomaly && (
+            <div style={{
+              margin: '0 0 14px 0',
+              padding: '10px 12px',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #DC2626',
+              borderRadius: '2px'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingBottom: '6px',
+                marginBottom: '8px',
+                borderBottom: '1px solid #FCA5A5',
+                color: '#991B1B',
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase'
+              }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <AlertTriangle style={{ width: '14px', height: '14px', color: '#DC2626' }} />
+                  RFCTLARR STATUTORY AUDIT EXCEPTION: VALUATION ANOMALY FLAGGED
+                </span>
+                <span className="gov-status-critical" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                  SCORE: {anomalyResult.anomalyScore}/100
+                </span>
+              </div>
+              <table className="gov-facts-table" style={{ width: '100%', margin: 0 }}>
+                <tbody>
+                  <tr>
+                    <td className="fact-label" style={{ color: '#991B1B', width: '140px', verticalAlign: 'top' }}>FLAG REASON</td>
+                    <td className="fact-value" style={{ color: '#7F1D1D', fontWeight: 600 }}>{anomalyResult.flagReason}</td>
+                  </tr>
+                  <tr>
+                    <td className="fact-label" style={{ color: '#991B1B' }}>COMPARABLE MEDIAN</td>
+                    <td className="fact-value" style={{ color: '#7F1D1D', fontWeight: 700 }}>₹ {anomalyResult.comparableMedianCr} Cr</td>
+                  </tr>
+                  <tr>
+                    <td className="fact-label" style={{ color: '#991B1B' }}>VARIANCE VS BENCHMARK</td>
+                    <td className="fact-value" style={{ color: '#7F1D1D', fontWeight: 700 }}>
+                      {anomalyResult.percentDeviation > 0 ? `+${anomalyResult.percentDeviation}%` : `${anomalyResult.percentDeviation}%`}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Case Facts */}
+          <table className="gov-facts-table" style={{ marginBottom: '14px' }}>
+            <tbody>
+              <tr>
+                <td className="fact-label">Survey / Khata</td>
+                <td className="fact-value">#{caseItem.surveyNumber} &bull; {caseItem.khataNumber}</td>
+              </tr>
+              <tr>
+                <td className="fact-label">Landowner</td>
+                <td className="fact-value">{caseItem.landownerName}</td>
+              </tr>
+              <tr>
+                <td className="fact-label">Award Valuation</td>
+                <td className="fact-value">₹ {caseItem.awardedCompensationCr} Cr</td>
+              </tr>
+              <tr>
+                <td className="fact-label">Already Disbursed</td>
+                <td className="fact-value">₹ {caseItem.disbursedCompensationCr} Cr</td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Tranche Amount */}
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+              Tranche 2 Sanction Amount (₹)
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: '#0B3D66' }}>₹</span>
+              <input
+                type="text"
+                value={trancheAmount}
+                onChange={(e) => setTrancheAmount(e.target.value)}
+                className="gov-input"
+                style={{ flex: 1, fontSize: '14px', fontWeight: 700, color: '#0B3D66' }}
+              />
+            </div>
+          </div>
+
+          {/* Aadhaar Verification */}
+          <table className="gov-facts-table" style={{ marginBottom: '14px' }}>
+            <tbody>
+              <tr>
+                <td className="fact-label">Aadhaar Status</td>
+                <td className="fact-value">
+                  <span className="gov-verified-tag">
+                    <ShieldCheck style={{ width: '12px', height: '12px' }} />
+                    Aadhaar NPCI Bridge Verified ({caseItem.aadhaarMasked})
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td className="fact-label">PFMS Routing</td>
+                <td className="fact-value">SBI PFMS Direct Credit to Beneficiary A/c</td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '12px', borderTop: '1px solid #E2E8F0' }}>
+            <button onClick={onClose} className="gov-flat-btn gov-flat-btn-secondary">
+              Cancel
+            </button>
+            <button
+              onClick={handleAuthorizePayment}
+              disabled={authorizing || success}
+              className="gov-flat-btn gov-flat-btn-success"
+              style={{ opacity: authorizing ? 0.7 : 1 }}
+            >
+              {authorizing ? (
+                <><RefreshCw style={{ width: '13px', height: '13px', animation: 'spin 1s linear infinite' }} /> Authorizing via PFMS...</>
+              ) : success ? (
+                <><CheckCircle2 style={{ width: '13px', height: '13px' }} /> ₹{trancheAmount} Credited Successfully</>
+              ) : (
+                <><Landmark style={{ width: '13px', height: '13px' }} /> Authorize PFMS DBT — ₹{trancheAmount}</>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

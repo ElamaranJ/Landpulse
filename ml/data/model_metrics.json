@@ -1,0 +1,25 @@
+{
+  "model_name": "RandomForest (Ensemble)",
+  "accuracy_pct": 89.4,
+  "f1_score": 0.8468,
+  "rmse_days": 18.8,
+  "test_samples": 640,
+  "top_risk_factors": [
+    "Active ownership dispute or title contestation",
+    "High Section 15 citizen objection density",
+    "Prolonged milestone delay beyond statutory limits",
+    "High joint-titleholder fragmentation",
+    "Remote site distance from sub-divisional headquarters"
+  ],
+  "base_feature_importances": {
+    "has_dispute": 0.4355,
+    "objection_count": 0.3009,
+    "stage_duration_days": 0.0826,
+    "owner_count": 0.0381,
+    "distance_from_hq_km": 0.0352,
+    "area_acres": 0.0336,
+    "district": 0.0324,
+    "project_category": 0.025,
+    "land_category": 0.0167
+  }
+}

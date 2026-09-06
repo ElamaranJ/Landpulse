@@ -5,10 +5,6 @@ import { ParcelMap } from '../../gis/ParcelMap';
 import {
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  Compass,
-  Filter,
-  Layers,
   MapPin,
   Navigation,
   Search,
@@ -19,13 +15,12 @@ import {
   X,
   RefreshCw,
   Eye,
-  SlidersHorizontal,
-  ChevronRight,
   ShieldCheck,
   Check,
   Map as MapIcon,
   ListFilter,
-  Maximize2
+  Layers,
+  FileCheck2
 } from 'lucide-react';
 
 export const OfficerInspectionDashboard: React.FC = () => {
@@ -64,7 +59,6 @@ export const OfficerInspectionDashboard: React.FC = () => {
     try {
       const data = await fetchParcels();
       setParcels(data);
-      // Auto-select first pending high priority parcel if none selected
       const firstPending = data.find(p => p.inspection?.required && p.inspection.priority === 'high') || data.find(p => p.inspection?.required);
       if (firstPending && !selectedParcelId) {
         setSelectedParcelId(firstPending.id);
@@ -95,7 +89,6 @@ export const OfficerInspectionDashboard: React.FC = () => {
       },
       err => {
         console.warn('Geolocation error:', err);
-        // Fall back to realistic field officer position in corridor
         setOfficerLocation([12.9260, 79.1400]);
         setGeoStatus('ready');
       },
@@ -103,9 +96,9 @@ export const OfficerInspectionDashboard: React.FC = () => {
     );
   };
 
-  // Calculate Haversine distance in km between two [lat, lng] coordinates
+  // Calculate Haversine distance in km
   const calculateDistanceKm = (point1: [number, number], point2: [number, number]): number => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = ((point2[0] - point1[0]) * Math.PI) / 180;
     const dLng = ((point2[1] - point1[1]) * Math.PI) / 180;
     const a =
@@ -118,18 +111,15 @@ export const OfficerInspectionDashboard: React.FC = () => {
     return parseFloat((R * c).toFixed(1));
   };
 
-  // Priority weight sorting helper
   const priorityWeight = (p: InspectionPriority) => (p === 'high' ? 3 : p === 'medium' ? 2 : 1);
 
   // Filtered & sorted queue list
   const filteredParcels = useMemo(() => {
     return parcels
       .filter(p => {
-        // Tab filter
         if (activeTab === 'pending' && !p.inspection?.required) return false;
         if (activeTab === 'completed' && p.inspection?.required) return false;
 
-        // Search
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
           const matches =
@@ -141,22 +131,18 @@ export const OfficerInspectionDashboard: React.FC = () => {
           if (!matches) return false;
         }
 
-        // District
         if (selectedDistrict !== 'all' && p.district.toLowerCase() !== selectedDistrict.toLowerCase()) {
           return false;
         }
 
-        // Project
         if (selectedProject !== 'all' && !p.project.toLowerCase().includes(selectedProject.toLowerCase())) {
           return false;
         }
 
-        // Priority
         if (selectedPriority !== 'all' && p.inspection?.priority !== selectedPriority) {
           return false;
         }
 
-        // Distance filter
         if (officerLocation && maxDistanceFilter < 50) {
           const dist = calculateDistanceKm(officerLocation, p.centroid);
           if (dist > maxDistanceFilter) return false;
@@ -175,7 +161,6 @@ export const OfficerInspectionDashboard: React.FC = () => {
       });
   }, [parcels, activeTab, searchQuery, selectedDistrict, selectedProject, selectedPriority, maxDistanceFilter, officerLocation]);
 
-  // Statistics calculation
   const stats = useMemo(() => {
     const totalPending = parcels.filter(p => p.inspection?.required).length;
     const highPriority = parcels.filter(p => p.inspection?.required && p.inspection.priority === 'high').length;
@@ -187,13 +172,11 @@ export const OfficerInspectionDashboard: React.FC = () => {
     return { totalPending, highPriority, completedToday, within10Km };
   }, [parcels, officerLocation]);
 
-  // Handle Card Click to zoom map
   const handleParcelCardClick = (parcel: Parcel) => {
     setSelectedParcelId(parcel.id);
     setHighlightParcelId(parcel.id);
   };
 
-  // Open inspection modal
   const handleOpenInspectModal = (parcel: Parcel, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setTargetParcelForInspect(parcel);
@@ -204,7 +187,6 @@ export const OfficerInspectionDashboard: React.FC = () => {
     setInspectModalOpen(true);
   };
 
-  // Handle Photo file selection with preview
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -216,7 +198,6 @@ export const OfficerInspectionDashboard: React.FC = () => {
     }
   };
 
-  // Submit Inspection completion
   const handleCompleteInspectionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetParcelForInspect) return;
@@ -230,11 +211,10 @@ export const OfficerInspectionDashboard: React.FC = () => {
         photoUrl: inspectPhotoPreview || undefined
       });
 
-      // Update local parcels state live
       setParcels(prev => prev.map(p => (p.id === updated.id ? updated : p)));
       setInspectModalOpen(false);
-      setSuccessToast(`Inspection recorded successfully for Survey No: ${updated.surveyNo}`);
-      setTimeout(() => setSuccessToast(null), 4500);
+      setSuccessToast(`Inspection recorded for Survey No: ${updated.surveyNo}`);
+      setTimeout(() => setSuccessToast(null), 4000);
     } catch (err) {
       console.error('Inspection completion failed', err);
       alert('Failed to save inspection. Please try again.');
@@ -246,135 +226,119 @@ export const OfficerInspectionDashboard: React.FC = () => {
   const selectedParcel = parcels.find(p => p.id === (highlightParcelId || selectedParcelId)) || null;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-68px)] bg-slate-950 text-slate-100 overflow-hidden font-sans">
-      {/* ── Top Dashboard Header ── */}
-      <header className="flex-shrink-0 bg-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3 shadow-md">
+    <div className="flex flex-col h-[calc(100vh-140px)] bg-[#F4F6F9] text-[#1E293B] overflow-hidden font-sans" style={{ border: '1px solid #CBD5E1', borderRadius: '2px' }}>
+      {/* ── Official Government Header Strip ── */}
+      <header className="flex-shrink-0 bg-white border-b border-slate-300 px-4 py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shadow-inner">
-              <Compass className="w-5 h-5" />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-bold text-[#0B3D66] uppercase tracking-wide">
+                Field Officer Cadastral Inspection &amp; Satellite Module
+              </h1>
+              <span className="gov-badge gov-badge-green text-[10px]">
+                GIS Synchronized
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                  Field Officer Inspection Module
-                </h1>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wide">
-                  Live GIS Satellite Sync
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Chennai–Bengaluru Expressway Corridor • Highway Land Acquisition Cell
-              </p>
-            </div>
+            <p className="text-xs text-slate-600 mt-0.5">
+              Chennai–Bengaluru Expressway Corridor • Competent Authority for Land Acquisition (CALA)
+            </p>
           </div>
 
-          {/* KPI Mini-Cards */}
-          <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto py-1">
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-sm">
-              <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-medium">Pending Queue</div>
-                <div className="text-sm font-bold text-white font-mono">{stats.totalPending} Parcels</div>
-              </div>
+          {/* Official Compact KPI Badges */}
+          <div className="flex items-center gap-2 overflow-x-auto py-0.5 text-xs">
+            <div className="bg-slate-50 border border-slate-300 rounded px-2.5 py-1 flex items-center gap-2">
+              <span className="text-slate-600 font-medium">Pending Inspections:</span>
+              <span className="font-bold text-[#0B3D66] font-mono">{stats.totalPending}</span>
             </div>
 
-            <div className="bg-slate-800/80 border border-rose-900/60 rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-sm">
-              <span className="text-sm">🔴</span>
-              <div>
-                <div className="text-[10px] text-rose-300 font-medium">High Priority</div>
-                <div className="text-sm font-bold text-rose-400 font-mono">{stats.highPriority} Urgent</div>
-              </div>
+            <div className="bg-red-50 border border-red-200 rounded px-2.5 py-1 flex items-center gap-2">
+              <span className="text-red-700 font-medium">Urgent High Priority:</span>
+              <span className="font-bold text-red-700 font-mono">{stats.highPriority}</span>
             </div>
 
-            <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 flex items-center gap-2 shadow-sm">
-              <Navigation className="w-4 h-4 text-sky-400" />
-              <div>
-                <div className="text-[10px] text-slate-400 font-medium">Within 10 km</div>
-                <div className="text-sm font-bold text-sky-400 font-mono">{stats.within10Km} Nearby</div>
-              </div>
+            <div className="bg-blue-50 border border-blue-200 rounded px-2.5 py-1 flex items-center gap-2">
+              <span className="text-blue-700 font-medium">Within 10 km:</span>
+              <span className="font-bold text-blue-700 font-mono">{stats.within10Km}</span>
             </div>
 
-            {/* Officer Live GPS Button */}
             <button
               type="button"
               onClick={requestLiveGPS}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                geoStatus === 'acquiring'
-                  ? 'bg-amber-600/30 border-amber-500 text-amber-300 animate-pulse'
-                  : 'bg-blue-600/20 border-blue-500/50 hover:bg-blue-600/30 text-blue-300'
-              }`}
-              title="Sync Officer Current GPS Coordinates"
+              className="gov-btn-secondary text-xs cursor-pointer py-1"
+              title="Sync Officer GPS Position"
             >
-              <MapPin className="w-3.5 h-3.5 text-blue-400" />
-              <span>{geoStatus === 'acquiring' ? 'Acquiring GPS...' : 'Officer Live GPS'}</span>
+              <MapPin className="w-3.5 h-3.5 text-[#0B3D66]" />
+              <span>{geoStatus === 'acquiring' ? 'Locating...' : 'Officer Live GPS'}</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Success Toast Notification */}
+      {/* Success Notification */}
       {successToast && (
-        <div className="fixed top-20 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-emerald-600 text-white rounded-xl shadow-2xl border border-emerald-400 animate-bounce">
-          <CheckCircle2 className="w-5 h-5" />
-          <span className="text-sm font-bold">{successToast}</span>
+        <div className="bg-emerald-700 text-white px-4 py-2 text-xs font-bold flex items-center justify-between border-b border-emerald-800">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{successToast}</span>
+          </div>
+          <button onClick={() => setSuccessToast(null)} className="text-white hover:text-slate-200">
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
-      {/* Mobile View Switcher (Visible on small screens) */}
-      <div className="flex md:hidden bg-slate-900 border-b border-slate-800 p-1">
+      {/* Mobile Tab Switcher */}
+      <div className="flex md:hidden bg-white border-b border-slate-300 p-1">
         <button
           type="button"
           onClick={() => setMobileView('list')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 ${
-            mobileView === 'list' ? 'bg-blue-600 text-white' : 'text-slate-400'
+          className={`flex-1 py-1.5 text-xs font-bold rounded ${
+            mobileView === 'list' ? 'bg-[#0B3D66] text-white' : 'text-slate-700'
           }`}
         >
-          <ListFilter className="w-3.5 h-3.5" />
-          <span>Queue ({filteredParcels.length})</span>
+          Inspection Queue ({filteredParcels.length})
         </button>
         <button
           type="button"
           onClick={() => setMobileView('map')}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 ${
-            mobileView === 'map' ? 'bg-blue-600 text-white' : 'text-slate-400'
+          className={`flex-1 py-1.5 text-xs font-bold rounded ${
+            mobileView === 'map' ? 'bg-[#0B3D66] text-white' : 'text-slate-700'
           }`}
         >
-          <MapIcon className="w-3.5 h-3.5" />
-          <span>Satellite Map</span>
+          GIS Satellite Map
         </button>
       </div>
 
-      {/* ── Main Dual-Panel Layout ── */}
+      {/* ── Main Work Area ── */}
       <div className="flex-1 flex overflow-hidden">
-        {/* ── Left Panel: Inspection Queue & Filters ── */}
+        {/* ── Left Column: Inspection Queue ── */}
         <div
-          className={`w-full md:w-[480px] lg:w-[520px] flex-shrink-0 flex flex-col border-r border-slate-800 bg-slate-900/60 backdrop-blur-md overflow-hidden ${
+          className={`w-full md:w-[440px] lg:w-[480px] flex-shrink-0 flex flex-col border-r border-slate-300 bg-white overflow-hidden ${
             mobileView === 'map' ? 'hidden md:flex' : 'flex'
           }`}
         >
-          {/* Tabs & Search Controls */}
-          <div className="p-4 border-b border-slate-800 space-y-3 flex-shrink-0 bg-slate-900/90">
-            {/* View Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+          {/* Controls & Filters */}
+          <div className="p-3 border-b border-slate-200 bg-slate-50 space-y-2.5">
+            {/* View Tab Buttons */}
+            <div className="flex items-center gap-1 border border-slate-300 bg-white p-0.5 rounded text-xs">
               <button
                 type="button"
                 onClick={() => setActiveTab('pending')}
-                className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                className={`flex-1 py-1 font-bold rounded transition-colors cursor-pointer ${
                   activeTab === 'pending'
-                    ? 'bg-rose-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#0B3D66] text-white'
+                    : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                Inspection Queue ({stats.totalPending})
+                Pending Queue ({stats.totalPending})
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('completed')}
-                className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                className={`flex-1 py-1 font-bold rounded transition-colors cursor-pointer ${
                   activeTab === 'completed'
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#0B3D66] text-white'
+                    : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 Inspected
@@ -382,46 +346,45 @@ export const OfficerInspectionDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('all')}
-                className={`flex-1 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                className={`flex-1 py-1 font-bold rounded transition-colors cursor-pointer ${
                   activeTab === 'all'
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#0B3D66] text-white'
+                    : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 All ({parcels.length})
               </button>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Input */}
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search survey no (e.g. 142/3A), owner, district..."
-                className="w-full pl-9 pr-8 py-2 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                placeholder="Search survey #, owner name, district..."
+                className="gov-input pl-8 py-1.5 text-xs"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3 h-3" />
                 </button>
               )}
             </div>
 
-            {/* Filter Dropdowns Row */}
+            {/* Filter Dropdowns */}
             <div className="grid grid-cols-3 gap-2 text-xs">
-              {/* District Filter */}
               <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">District</label>
+                <label className="block text-[10px] font-bold text-slate-600 mb-0.5">District</label>
                 <select
                   value={selectedDistrict}
                   onChange={e => setSelectedDistrict(e.target.value)}
-                  className="w-full px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="gov-select py-1 text-xs"
                 >
                   <option value="all">All Districts</option>
                   <option value="Vellore">Vellore</option>
@@ -431,26 +394,24 @@ export const OfficerInspectionDashboard: React.FC = () => {
                 </select>
               </div>
 
-              {/* Priority Filter */}
               <div>
-                <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Priority</label>
+                <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Priority</label>
                 <select
                   value={selectedPriority}
                   onChange={e => setSelectedPriority(e.target.value)}
-                  className="w-full px-2 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                  className="gov-select py-1 text-xs"
                 >
                   <option value="all">All Priorities</option>
-                  <option value="high">🔴 High</option>
-                  <option value="medium">🟡 Medium</option>
-                  <option value="low">🔵 Low</option>
+                  <option value="high">High Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="low">Low Priority</option>
                 </select>
               </div>
 
-              {/* Max Distance Radius Filter */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">Radius</label>
-                  <span className="text-[10px] font-mono text-sky-400 font-bold">
+                <div className="flex justify-between items-center mb-0.5">
+                  <label className="text-[10px] font-bold text-slate-600">Radius</label>
+                  <span className="text-[10px] font-mono font-bold text-[#0B3D66]">
                     {maxDistanceFilter >= 50 ? 'All' : `${maxDistanceFilter}km`}
                   </span>
                 </div>
@@ -461,24 +422,23 @@ export const OfficerInspectionDashboard: React.FC = () => {
                   step="2"
                   value={maxDistanceFilter}
                   onChange={e => setMaxDistanceFilter(parseInt(e.target.value))}
-                  className="w-full accent-blue-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-[#0B3D66] h-1.5 bg-slate-200 rounded appearance-none cursor-pointer"
                 />
               </div>
             </div>
           </div>
 
-          {/* Parcel Cards List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* List of Parcel Cards */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[#F4F6F9]">
             {loading ? (
-              <div className="flex flex-col items-center justify-center h-48 text-slate-400 space-y-2">
-                <RefreshCw className="w-6 h-6 animate-spin text-blue-500" />
-                <span className="text-xs">Loading GIS Parcel Queue...</span>
+              <div className="flex flex-col items-center justify-center h-40 text-slate-600 space-y-2">
+                <RefreshCw className="w-5 h-5 animate-spin text-[#0B3D66]" />
+                <span className="text-xs">Loading Cadastral Queue...</span>
               </div>
             ) : filteredParcels.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 bg-slate-950/40 rounded-xl border border-slate-800">
-                <ShieldCheck className="w-10 h-10 mx-auto mb-2 text-slate-600" />
-                <p className="text-sm font-semibold text-slate-400">No matching parcels in queue</p>
-                <p className="text-xs text-slate-500 mt-1">Try relaxing your search or filter options</p>
+              <div className="p-6 text-center text-slate-600 bg-white border border-slate-300 rounded">
+                <p className="font-bold text-xs">No matching parcels in queue</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Adjust filter criteria to view more records</p>
               </div>
             ) : (
               filteredParcels.map(parcel => {
@@ -491,99 +451,83 @@ export const OfficerInspectionDashboard: React.FC = () => {
                   <div
                     key={parcel.id}
                     onClick={() => handleParcelCardClick(parcel)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer text-xs relative ${
+                    className={`p-3 bg-white border transition-all cursor-pointer text-xs ${
                       isSelected
-                        ? 'bg-slate-800/95 border-blue-500 ring-2 ring-blue-500/30 shadow-xl'
-                        : 'bg-slate-950/80 border-slate-800/90 hover:border-slate-700 hover:bg-slate-900/90'
+                        ? 'border-[#0B3D66] border-l-4 bg-blue-50/40'
+                        : 'border-slate-300 hover:border-slate-400'
                     }`}
                   >
-                    {/* Top Row: Priority Badge, Survey No, Distance */}
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-1.5">
                         {parcel.inspection?.required ? (
                           <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                            className={`gov-badge ${
                               isHigh
-                                ? 'bg-rose-900/60 text-rose-300 border border-rose-500/50'
+                                ? 'gov-badge-red'
                                 : isMedium
-                                ? 'bg-amber-900/60 text-amber-300 border border-amber-500/50'
-                                : 'bg-blue-900/60 text-blue-300 border border-blue-500/50'
+                                ? 'gov-badge-amber'
+                                : 'gov-badge-blue'
                             }`}
                           >
-                            <span>{isHigh ? '🔴' : isMedium ? '🟡' : '🔵'}</span>
-                            <span>{parcel.inspection.priority.toUpperCase()}</span>
+                            {parcel.inspection.priority.toUpperCase()}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-600/40 flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-400" />
-                            <span>INSPECTED</span>
+                          <span className="gov-badge gov-badge-green">
+                            INSPECTED
                           </span>
                         )}
-                        <span className="font-mono text-sm font-black text-white">
+                        <span className="font-bold text-slate-900 font-mono">
                           Survey No: {parcel.surveyNo}
                         </span>
                       </div>
 
                       {distanceKm !== null && (
-                        <span className="text-[11px] font-mono text-sky-400 font-bold bg-sky-950/80 px-2 py-0.5 rounded-md border border-sky-800/50 flex items-center gap-1">
-                          <Navigation className="w-3 h-3" />
-                          {distanceKm} km
+                        <span className="text-[11px] font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          {distanceKm} km away
                         </span>
                       )}
                     </div>
 
-                    {/* Landowner & Project */}
-                    <div className="text-slate-300 mb-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span>
-                          Owner: <strong className="text-white">{parcel.owner}</strong>
-                        </span>
-                        <span className="text-slate-400 font-mono text-[11px]">{parcel.area}</span>
+                    {/* Details */}
+                    <div className="space-y-0.5 text-slate-700 text-xs">
+                      <div className="flex justify-between">
+                        <span>Owner: <strong className="text-slate-900">{parcel.owner}</strong></span>
+                        <span className="font-mono text-slate-600">{parcel.area}</span>
                       </div>
-                      <div className="text-[11px] text-slate-400 truncate mt-0.5">
-                        {parcel.project} • <span className="text-slate-300">{parcel.district}</span>
+                      <div className="text-[11px] text-slate-500">
+                        {parcel.project} • <span>{parcel.district} District</span>
                       </div>
                     </div>
 
-                    {/* Inspection Reason Box */}
+                    {/* Inspection Note Box */}
                     {parcel.inspection?.required && (
-                      <div className="p-2 rounded-lg bg-rose-950/30 border border-rose-900/40 text-[11px] text-rose-200 mb-3">
-                        <div className="font-semibold text-rose-400 flex items-center gap-1">
+                      <div className="mt-2 p-2 bg-red-50/60 border border-red-200 rounded text-[11px] text-red-900">
+                        <div className="font-bold flex items-center gap-1 text-red-800">
                           <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-                          <span>Reason: {parcel.inspection.reason}</span>
+                          <span>Trigger: {parcel.inspection.reason}</span>
                         </div>
-                        <div className="mt-1 flex items-center justify-between text-[10.5px] text-rose-300 font-mono">
-                          <span>Due: {parcel.inspection.dueDate}</span>
-                          {parcel.inspection.assignedOfficer && (
-                            <span className="text-slate-400 truncate max-w-[150px]">
-                              {parcel.inspection.assignedOfficer}
-                            </span>
-                          )}
+                        <div className="mt-1 flex items-center justify-between text-[10.5px] text-red-700">
+                          <span>Due Date: {parcel.inspection.dueDate}</span>
+                          <span className="truncate max-w-[150px]">{parcel.inspection.assignedOfficer}</span>
                         </div>
                       </div>
                     )}
 
-                    {/* Inspected Details if completed */}
+                    {/* Completed Note */}
                     {!parcel.inspection?.required && parcel.inspection?.lastInspectedOn && (
-                      <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-900/40 text-[11px] text-emerald-200 mb-3">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-emerald-300">
-                            Inspected on {parcel.inspection.lastInspectedOn}
-                          </span>
-                          <span className="capitalize font-bold text-white px-1.5 py-0.5 rounded bg-emerald-900/60 text-[10px]">
-                            {parcel.status}
-                          </span>
-                        </div>
+                      <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded text-[11px] text-emerald-900">
+                        <span className="font-bold">Verified on {parcel.inspection.lastInspectedOn}</span>
                         {parcel.inspection.notes && (
-                          <p className="mt-1 text-[10.5px] text-slate-300 italic line-clamp-1">
+                          <p className="mt-0.5 text-[10.5px] text-slate-700 italic">
                             &quot;{parcel.inspection.notes}&quot;
                           </p>
                         )}
                       </div>
                     )}
 
-                    {/* Action Buttons Row */}
-                    <div className="pt-2 border-t border-slate-800 flex items-center gap-2">
+                    {/* Buttons */}
+                    <div className="mt-2.5 pt-2 border-t border-slate-200 flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={e => {
@@ -591,10 +535,10 @@ export const OfficerInspectionDashboard: React.FC = () => {
                           handleParcelCardClick(parcel);
                           if (window.innerWidth < 768) setMobileView('map');
                         }}
-                        className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+                        className="gov-btn-secondary text-[11px] py-1 flex-1 cursor-pointer"
                       >
-                        <Eye className="w-3.5 h-3.5 text-blue-400" />
-                        <span>View on Map</span>
+                        <Eye className="w-3 h-3" />
+                        <span>View Map</span>
                       </button>
 
                       <a
@@ -602,29 +546,29 @@ export const OfficerInspectionDashboard: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}
-                        className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+                        className="gov-btn-secondary text-[11px] py-1 flex-1 cursor-pointer"
                       >
-                        <Navigation className="w-3.5 h-3.5 text-sky-400" />
-                        <span>Get Directions</span>
+                        <Navigation className="w-3 h-3" />
+                        <span>Directions</span>
                       </a>
 
                       {parcel.inspection?.required ? (
                         <button
                           type="button"
                           onClick={e => handleOpenInspectModal(parcel, e)}
-                          className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md transition-colors cursor-pointer"
+                          className="gov-btn-primary text-[11px] py-1 flex-1 cursor-pointer"
                         >
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Mark Inspected</span>
+                          <ShieldCheck className="w-3 h-3" />
+                          <span>Inspect</span>
                         </button>
                       ) : (
                         <button
                           type="button"
                           onClick={e => handleOpenInspectModal(parcel, e)}
-                          className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-medium cursor-pointer"
-                          title="Edit Inspection Record"
+                          className="gov-btn-secondary text-[11px] py-1 px-2 cursor-pointer"
+                          title="Edit Record"
                         >
-                          <FileText className="w-3.5 h-3.5" />
+                          <FileText className="w-3 h-3" />
                         </button>
                       )}
                     </div>
@@ -635,28 +579,25 @@ export const OfficerInspectionDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Right Panel: Full GIS Satellite Map ── */}
+        {/* ── Right Column: Map ── */}
         <div
-          className={`flex-1 flex flex-col bg-slate-950 relative overflow-hidden ${
+          className={`flex-1 flex flex-col bg-white relative overflow-hidden ${
             mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >
-          {/* Selected Parcel Top Info Ribbon */}
+          {/* Selected Ribbon */}
           {selectedParcel && (
-            <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between text-xs backdrop-blur-md z-10 shadow-lg">
+            <div className="bg-white border-b border-slate-300 px-4 py-2 flex items-center justify-between text-xs z-10">
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-blue-400" />
-                  <span className="font-mono font-bold text-white text-sm">
-                    {selectedParcel.surveyNo}
-                  </span>
-                </div>
-                <span className="text-slate-400">•</span>
-                <span className="text-slate-200 font-medium">{selectedParcel.owner}</span>
-                <span className="text-slate-400">•</span>
-                <span className="text-emerald-400 font-mono">{selectedParcel.area}</span>
-                <span className="text-slate-400 hidden sm:inline">•</span>
-                <span className="text-slate-300 hidden sm:inline">{selectedParcel.project}</span>
+                <span className="font-bold text-[#0B3D66] font-mono">
+                  Survey No: {selectedParcel.surveyNo}
+                </span>
+                <span className="text-slate-400">|</span>
+                <span>{selectedParcel.owner}</span>
+                <span className="text-slate-400">|</span>
+                <span className="font-bold text-slate-700">{selectedParcel.area}</span>
+                <span className="text-slate-400 hidden sm:inline">|</span>
+                <span className="text-slate-600 hidden sm:inline">{selectedParcel.project}</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -664,9 +605,9 @@ export const OfficerInspectionDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleOpenInspectModal(selectedParcel)}
-                    className="flex items-center gap-1 px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow cursor-pointer transition-colors"
+                    className="gov-btn-primary text-xs py-1 cursor-pointer"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <CheckCircle2 className="w-3 h-3" />
                     <span>Complete Inspection</span>
                   </button>
                 )}
@@ -674,16 +615,16 @@ export const OfficerInspectionDashboard: React.FC = () => {
                   href={`https://www.google.com/maps/dir/?api=1&destination=${selectedParcel.centroid[0]},${selectedParcel.centroid[1]}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow cursor-pointer transition-colors"
+                  className="gov-btn-secondary text-xs py-1 cursor-pointer"
                 >
-                  <Navigation className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Navigate</span>
+                  <Navigation className="w-3 h-3" />
+                  <span>Navigate</span>
                 </a>
               </div>
             </div>
           )}
 
-          {/* Embedded Reusable ParcelMap */}
+          {/* GIS Map */}
           <div className="flex-1 w-full h-full relative">
             <ParcelMap
               parcels={parcels}
@@ -703,113 +644,96 @@ export const OfficerInspectionDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ── "Mark as Inspected" Inspection Form Modal ── */}
+      {/* ── Official Inspection Form Modal ── */}
       {inspectModalOpen && targetParcelForInspect && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-rose-600/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white">
-                    Submit Field Inspection Report
-                  </h3>
-                  <p className="text-xs text-slate-400 font-mono">
-                    Survey No: {targetParcelForInspect.surveyNo} • {targetParcelForInspect.owner}
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '2px', width: '100%', maxWidth: '32rem', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            <div className="px-5 py-3.5 bg-[#0B3D66] text-white flex items-center justify-between border-b-2 border-amber-400">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wide">
+                  Submit Field Officer Verification Report
+                </h3>
+                <p className="text-xs text-blue-200 mt-0.5">
+                  Survey No: {targetParcelForInspect.surveyNo} • {targetParcelForInspect.owner}
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setInspectModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-blue-200 hover:text-white p-1"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modal Body / Form */}
-            <form onSubmit={handleCompleteInspectionSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
-              {/* Parcel Context Banner */}
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 space-y-1">
+            <form onSubmit={handleCompleteInspectionSubmit} className="p-5 space-y-3.5 overflow-y-auto flex-1 text-xs">
+              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded text-slate-700 space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Project:</span>
-                  <span className="font-semibold text-white">{targetParcelForInspect.project}</span>
+                  <span className="text-slate-500 font-medium">Project Corridor:</span>
+                  <span className="font-bold text-slate-900">{targetParcelForInspect.project}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Location:</span>
-                  <span className="font-medium text-slate-200">{targetParcelForInspect.district} District</span>
+                  <span className="text-slate-500 font-medium">Revenue District:</span>
+                  <span>{targetParcelForInspect.district}</span>
                 </div>
                 {targetParcelForInspect.inspection?.reason && (
-                  <div className="mt-2 pt-2 border-t border-slate-800 text-rose-300">
-                    <span className="font-semibold text-rose-400">Trigger Reason:</span> {targetParcelForInspect.inspection.reason}
+                  <div className="pt-1.5 border-t border-slate-200 text-red-700">
+                    <span className="font-bold">Flagged Reason:</span> {targetParcelForInspect.inspection.reason}
                   </div>
                 )}
               </div>
 
-              {/* Inspection Date */}
               <div>
-                <label className="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-blue-400" />
-                  <span>Inspection Date</span>
+                <label className="block text-slate-800 font-bold mb-1">
+                  Inspection Date
                 </label>
                 <input
                   type="date"
                   required
                   value={inspectDate}
                   onChange={e => setInspectDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-blue-500"
+                  className="gov-input text-xs"
                 />
               </div>
 
-              {/* Updated Status Dropdown */}
               <div>
-                <label className="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-emerald-400" />
-                  <span>Updated Parcel Status Post-Inspection</span>
+                <label className="block text-slate-800 font-bold mb-1">
+                  Updated Parcel Acquisition Status
                 </label>
                 <select
                   value={inspectNewStatus}
                   onChange={e => setInspectNewStatus(e.target.value as ParcelStatus)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-blue-500 font-semibold"
+                  className="gov-select text-xs font-semibold"
                 >
-                  <option value="in_progress">🟡 In Progress / Valuation Ongoing</option>
-                  <option value="completed">🟢 Completed / Ready for Award</option>
-                  <option value="dispute">🔴 Dispute / Litigation Pending</option>
-                  <option value="not_started">⚪ Not Started</option>
+                  <option value="in_progress">In Progress / Joint Measurement Ongoing</option>
+                  <option value="completed">Completed / Title Verified for Award</option>
+                  <option value="dispute">Dispute / Sub-judice in Court</option>
+                  <option value="not_started">Not Started</option>
                 </select>
               </div>
 
-              {/* Officer Inspection Notes */}
               <div>
-                <label className="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-amber-400" />
-                  <span>Officer Verification Notes & Field Observations</span>
+                <label className="block text-slate-800 font-bold mb-1">
+                  Field Verification Remarks &amp; Ground Notes
                 </label>
                 <textarea
                   rows={3}
                   required
-                  placeholder="Enter detailed observations regarding boundaries, structures, crop status, or dispute resolution..."
+                  placeholder="Enter boundary confirmation, tree/structure count, or landowner consent notes..."
                   value={inspectNotes}
                   onChange={e => setInspectNotes(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 text-xs focus:outline-none focus:border-blue-500 resize-none placeholder:text-slate-500 leading-relaxed"
+                  className="gov-input text-xs resize-none"
                 />
               </div>
 
-              {/* Field Photo Upload Simulator */}
               <div>
-                <label className="block text-slate-300 font-bold mb-1.5 flex items-center gap-1.5">
-                  <Camera className="w-4 h-4 text-purple-400" />
-                  <span>Field Photo Evidence (Optional)</span>
+                <label className="block text-slate-800 font-bold mb-1">
+                  Field Photo Evidence (Optional)
                 </label>
                 <div className="flex items-center gap-3">
-                  <label className="flex-1 flex flex-col items-center justify-center p-3 border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl cursor-pointer bg-slate-950/60 hover:bg-slate-950 transition-colors">
-                    <Upload className="w-5 h-5 text-slate-400 mb-1" />
-                    <span className="text-[11px] text-slate-300 font-medium">Click to capture / attach photo</span>
-                    <span className="text-[10px] text-slate-500">JPG, PNG up to 10MB</span>
+                  <label className="flex-1 flex flex-col items-center justify-center p-3 border border-dashed border-slate-300 hover:border-[#0B3D66] rounded cursor-pointer bg-slate-50">
+                    <Upload className="w-4 h-4 text-slate-500 mb-1" />
+                    <span className="text-[11px] text-slate-700 font-medium">Attach geo-tagged field photo</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -818,45 +742,34 @@ export const OfficerInspectionDashboard: React.FC = () => {
                     />
                   </label>
                   {inspectPhotoPreview && (
-                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-600 flex-shrink-0">
+                    <div className="relative w-14 h-14 rounded border border-slate-300 overflow-hidden flex-shrink-0">
                       <img src={inspectPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => setInspectPhotoPreview(null)}
-                        className="absolute top-1 right-1 bg-black/70 p-0.5 rounded-full text-white hover:bg-rose-600"
+                        className="absolute top-0.5 right-0.5 bg-black/70 p-0.5 rounded text-white"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-2.5 h-2.5" />
                       </button>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Footer Actions */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setInspectModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold cursor-pointer transition-colors"
+                  className="gov-btn-secondary text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold shadow-lg shadow-emerald-900/30 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+                  className="gov-btn-primary text-xs"
                 >
-                  {submitting ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Confirm & Save Inspection</span>
-                    </>
-                  )}
+                  {submitting ? 'Saving...' : 'Confirm & Save Inspection'}
                 </button>
               </div>
             </form>

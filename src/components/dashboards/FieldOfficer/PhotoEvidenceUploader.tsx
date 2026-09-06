@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { FieldParcel, PhotoEvidence } from '../../../types';
-import { Camera, MapPin, Tag, Plus, CheckCircle2, Trash2 } from 'lucide-react';
+import { Camera, Upload } from 'lucide-react';
 import { SafeImage } from '../../common/SafeImage';
 
 interface PhotoEvidenceUploaderProps {
@@ -34,10 +34,7 @@ export const PhotoEvidenceUploader: React.FC<PhotoEvidenceUploaderProps> = ({
   ]);
 
   const categories: ('Boundary' | 'Crops' | 'Structure' | 'Neighboring')[] = [
-    'Boundary',
-    'Crops',
-    'Structure',
-    'Neighboring',
+    'Boundary', 'Crops', 'Structure', 'Neighboring',
   ];
 
   const handleCapture = () => {
@@ -56,99 +53,100 @@ export const PhotoEvidenceUploader: React.FC<PhotoEvidenceUploaderProps> = ({
   };
 
   return (
-    <div className="gov-card p-6 sm:p-7 mb-8">
+    <div style={{ border: '1px solid #CBD5E1', borderRadius: '2px', backgroundColor: '#FFFFFF', padding: '14px 16px', marginBottom: '12px' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 mb-6">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h3 className="text-lg sm:text-xl font-bold text-[#0B3D66] font-sans tracking-tight">
-              Geotagged Photo &amp; Asset Evidence Uploader
-            </h3>
-            <span className="gov-badge gov-badge-info">GEOTAGGED</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">NavIC timestamped spatial evidence for crop, structure, and tree compensation valuation</p>
-        </div>
-        <span className="gov-badge gov-badge-neutral font-mono self-start sm:self-auto">
-          {photos.length} Photos Attached
-        </span>
+      <div className="gov-register-header" style={{ margin: '0 0 10px 0' }}>
+        <div className="reg-meta">GEOTAGGED PHOTO &amp; ASSET EVIDENCE &bull; NavIC TIMESTAMPED &bull; {photos.length} Photos Attached</div>
+        <div className="reg-title">Field Evidence Uploader &amp; Valuation Dossier</div>
       </div>
 
-      <div className="space-y-6">
-        {/* Category Selector + Capture Form */}
-        <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-5">
-          <label className="block text-xs font-bold text-slate-600 uppercase font-mono mb-2.5">
-            Select Asset Evidence Category:
-          </label>
+      {/* Category Selector + Capture Form */}
+      <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '2px', padding: '12px', marginBottom: '12px' }}>
+        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+          Select Asset Evidence Category:
+        </label>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`h-11 px-4 rounded-lg font-bold text-xs uppercase transition-all flex items-center justify-center gap-2 border ${
-                  selectedCategory === cat
-                    ? 'bg-[#0B3D66] text-white border-[#072742] shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <span>{cat}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Enter observation notes (e.g. Boundary peg placed near well, 14 teak trees standing)..."
-              className="gov-input flex-1"
-            />
-
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" style={{ marginBottom: '10px' }}>
+          {categories.map((cat) => (
             <button
-              onClick={handleCapture}
-              className="h-11 px-6 bg-[#0B3D66] hover:bg-[#072742] text-white font-bold text-xs uppercase rounded-lg flex items-center justify-center gap-2 shrink-0 shadow-xs transition-colors"
+              key={cat}
+              type="button"
+              onClick={() => setSelectedCategory(cat)}
+              className={`gov-flat-btn ${selectedCategory === cat ? 'gov-flat-btn-primary' : 'gov-flat-btn-secondary'}`}
+              style={{ justifyContent: 'center', padding: '6px 12px', fontSize: '11px' }}
             >
-              <Camera className="w-4 h-4" />
-              <span>Capture &amp; Geotag Photo</span>
+              {cat}
             </button>
-          </div>
+          ))}
         </div>
 
-        {/* Attached Photos Grid with 24px Gap */}
-        <div>
-          <h4 className="text-xs font-bold text-slate-500 uppercase font-mono tracking-wider mb-3">
-            Attached Field Evidence Dossier:
-          </h4>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Enter observation notes (e.g. Boundary peg placed near well, 14 teak trees standing)..."
+            className="gov-input flex-1"
+          />
+          <button
+            onClick={handleCapture}
+            className="gov-flat-btn gov-flat-btn-primary"
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            <Camera style={{ width: '14px', height: '14px' }} />
+            Capture &amp; Geotag Photo
+          </button>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {/* Photo Register Table */}
+      <div className="gov-section-divider" style={{ marginTop: '0' }}>
+        <span className="section-label">ATTACHED FIELD EVIDENCE DOSSIER</span>
+      </div>
+
+      <div style={{ overflowX: 'auto' }}>
+        <table className="gov-stage-register" style={{ fontSize: '12px', tableLayout: 'fixed', width: '100%' }}>
+          <colgroup>
+            <col style={{ width: '50px' }} />
+            <col style={{ width: '95px' }} />
+            <col style={{ width: '140px' }} />
+            <col style={{ width: '140px' }} />
+            <col style={{ width: 'auto' }} />
+            <col style={{ width: '75px' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={{ width: '50px' }}>ID</th>
+              <th style={{ width: '95px' }}>Category</th>
+              <th style={{ width: '140px' }}>Coordinates</th>
+              <th style={{ width: '140px' }}>Timestamp</th>
+              <th>Notes</th>
+              <th style={{ width: '75px', textAlign: 'center' }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
             {photos.map((item) => (
-              <div key={item.id} className="gov-card overflow-hidden flex flex-col justify-between">
-                <div className="relative h-44 bg-slate-100 overflow-hidden">
-                  <SafeImage
-                    src={item.url}
-                    alt={item.category}
-                    fallbackText="Survey Evidence Photo"
-                    containerClassName="w-full h-full"
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-3 left-3 bg-[#0B3D66] text-white text-[10px] font-bold font-mono px-2.5 py-1 rounded-md shadow-sm">
-                    {item.category.toUpperCase()}
-                  </span>
-                </div>
-
-                <div className="p-4 text-xs space-y-1.5">
-                  <p className="font-bold text-slate-900 line-clamp-2 leading-snug">{item.notes}</p>
-                  <div className="text-[11px] text-slate-500 font-mono pt-2 border-t border-slate-100">
-                    <span className="block font-bold text-[#0B3D66]">{item.coordinates}</span>
-                    <span className="block text-slate-400 mt-0.5">{item.timestamp}</span>
-                  </div>
-                </div>
-              </div>
+              <tr key={item.id}>
+                <td style={{ fontWeight: 700, verticalAlign: 'middle' }}>{item.id}</td>
+                <td style={{ fontWeight: 600, color: '#0B3D66', verticalAlign: 'middle' }}>{item.category}</td>
+                <td style={{ fontSize: '11.5px', color: '#059669', fontWeight: 600, verticalAlign: 'middle' }}>{item.coordinates}</td>
+                <td style={{ fontSize: '11.5px', color: '#64748B', verticalAlign: 'middle' }}>{item.timestamp}</td>
+                <td style={{ fontSize: '11.5px', color: '#475569', verticalAlign: 'middle' }}>{item.notes}</td>
+                <td style={{ textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="gov-flat-btn gov-flat-btn-secondary"
+                    style={{ fontSize: '10px', padding: '2px 8px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
+                  >
+                    View
+                  </a>
+                </td>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );

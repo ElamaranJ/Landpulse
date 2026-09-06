@@ -1,0 +1,10 @@
+{
+  "model_name": "Isolation Forest + Robust Grouped Median/IQR Baseline",
+  "records_trained": 2600,
+  "precision_pct": 7.7,
+  "recall_pct": 6.5,
+  "f1_score": 0.0705,
+  "contamination": 0.04,
+  "grouped_categories_count": 137,
+  "disclaimer": "Trained on synthetic compensation award data"
+}

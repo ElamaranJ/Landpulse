@@ -1,106 +1,202 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MOCK_RISK_ITEMS } from '../../../data/mockData';
-import { CheckCircle2, ChevronRight, Zap, ArrowRight } from 'lucide-react';
+import { RiskEngineItem } from '../../../types';
+import { predictRisk, RiskPredictionFeatures } from '../../../services/api';
+import { CheckCircle2 } from 'lucide-react';
+
+const PROJECT_FEATURES: Record<string, RiskPredictionFeatures> = {
+  'PRJ-2024-EDFC-DANK': {
+    district: 'Hooghly',
+    project_category: 'Railways',
+    has_dispute: 1,
+    objection_count: 7,
+    stage_duration_days: 195,
+    owner_count: 9,
+    area_acres: 65,
+    land_category: 'agricultural'
+  },
+  'PRJ-2024-KEN-BETWA': {
+    district: 'Panna',
+    project_category: 'Water',
+    has_dispute: 0,
+    objection_count: 5,
+    stage_duration_days: 145,
+    owner_count: 5,
+    area_acres: 120,
+    land_category: 'agricultural'
+  },
+  'PRJ-2024-JEWAR-AIR': {
+    district: 'Gautam Buddha Nagar',
+    project_category: 'Aviation',
+    has_dispute: 1,
+    objection_count: 3,
+    stage_duration_days: 85,
+    owner_count: 4,
+    area_acres: 28,
+    land_category: 'commercial'
+  },
+  'PRJ-2024-DEL-MUM': {
+    district: 'Palghar',
+    project_category: 'Highways',
+    has_dispute: 0,
+    objection_count: 1,
+    stage_duration_days: 45,
+    owner_count: 2,
+    area_acres: 16,
+    land_category: 'agricultural'
+  },
+};
 
 export const RecommendedActions: React.FC = () => {
+  const [riskItems, setRiskItems] = useState<RiskEngineItem[]>(MOCK_RISK_ITEMS);
   const [intervenedIds, setIntervenedIds] = useState<string[]>(['RSK-003']);
+  const [isPredicting, setIsPredicting] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadModelPredictions() {
+      setIsPredicting(true);
+
+      try {
+        const updatedItems = await Promise.all(
+          MOCK_RISK_ITEMS.map(async (item) => {
+            const features = PROJECT_FEATURES[item.projectId] || {
+              stage_duration_days: 90,
+              district: item.state,
+              objection_count: 2,
+              has_dispute: item.compositeRisk > 60 ? 1 : 0
+            };
+
+            try {
+              const res = await predictRisk(features);
+              const topFactor = res.topFactors?.[0] || 'Milestone delay beyond statutory limit';
+
+              return {
+                ...item,
+                compositeRisk: res.riskScore,
+                predictedDelayMonths: res.predictedDelayMonths,
+                recommendedIntervention: `Issue fast-track administrative order — top risk factor: ${topFactor}`
+              };
+            } catch {
+              return item;
+            }
+          })
+        );
+
+        if (isMounted) {
+          setRiskItems(updatedItems);
+        }
+      } finally {
+        if (isMounted) {
+          setIsPredicting(false);
+        }
+      }
+    }
+
+    loadModelPredictions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleIntervene = (id: string) => {
     setIntervenedIds((prev) => [...prev, id]);
   };
 
-  return (
-    <div className="gov-card p-6 sm:p-7 mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 mb-6">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h4 className="font-bold text-lg text-[#0B3D66] font-sans tracking-tight">
-              Prescriptive Administrative Interventions &amp; Fast-Track Directives
-            </h4>
-            <span className="gov-badge gov-badge-warning">
-              CABINET DIRECTIVES
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            High-leverage statutory directives dispatched to State Chief Secretaries &amp; District Collectors
-          </p>
-        </div>
+  const totalCapitalAtRisk = riskItems.reduce((acc, item) => acc + item.financialImpactCr, 0);
 
-        <span className="text-xs text-slate-600 font-mono self-start sm:self-auto">
-          Estimated Capital at Risk: <strong className="text-red-700 font-bold">₹4,560 Cr</strong>
+  return (
+    <div style={{ marginBottom: '12px' }}>
+      <div className="gov-section-divider" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+        <span className="section-label">
+          PRESCRIPTIVE ADMINISTRATIVE INTERVENTIONS &amp; FAST-TRACK DIRECTIVES
+          {isPredicting && <span style={{ marginLeft: '8px', color: '#94A3B8', fontSize: '10px' }}>(scoring via ML...)</span>}
+        </span>
+        <span style={{ fontSize: '12px', color: '#DC2626', fontWeight: 700 }}>
+          Estimated Capital at Risk: ₹{totalCapitalAtRisk.toLocaleString('en-IN')} Cr
         </span>
       </div>
 
-      {/* Recommended Action Directives with Generous Spacing */}
-      <div className="space-y-4 font-sans text-xs">
-        {MOCK_RISK_ITEMS.map((item) => {
-          const isDone = intervenedIds.includes(item.id);
+      <div style={{ overflowX: 'auto' }}>
+        <table className="gov-stage-register" style={{ tableLayout: 'fixed', width: '100%', minWidth: '1060px' }}>
+          <colgroup>
+            <col style={{ width: '80px' }} />
+            <col style={{ width: 'auto' }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '95px' }} />
+            <col style={{ width: '80px' }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '260px' }} />
+            <col style={{ width: '125px' }} />
+            <col style={{ width: '90px' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={{ width: '80px' }}>ID</th>
+              <th>Project</th>
+              <th style={{ width: '100px' }}>State</th>
+              <th style={{ width: '95px', textAlign: 'center' }}>Risk Score</th>
+              <th style={{ width: '80px' }}>Delay</th>
+              <th style={{ width: '100px', textAlign: 'right' }}>Impact ₹</th>
+              <th style={{ width: '260px' }}>Model Prescribed Intervention</th>
+              <th style={{ width: '125px', textAlign: 'center' }}>Dispatch Status</th>
+              <th style={{ width: '90px', textAlign: 'center' }}>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {riskItems.map((item) => {
+              const isDone = intervenedIds.includes(item.id);
+              const riskClass = item.compositeRisk > 75 ? 'gov-status-critical' : item.compositeRisk > 50 ? 'gov-status-high' : 'gov-status-current';
 
-          return (
-            <div
-              key={item.id}
-              className={`p-5 rounded-xl border transition-all ${
-                isDone
-                  ? 'bg-emerald-50/50 border-emerald-300'
-                  : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-2xs'
-              }`}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3 mb-2 font-mono">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span
-                      className={`gov-badge ${
-                        item.compositeRisk > 75 ? 'gov-badge-critical' : item.compositeRisk > 50 ? 'gov-badge-warning' : 'gov-badge-info'
-                      }`}
-                    >
-                      RISK {item.compositeRisk}/100
-                    </span>
-                    <span className="text-xs font-bold text-slate-500">{item.state}</span>
-                  </div>
-                  <h5 className="font-bold text-base text-[#0B3D66] font-sans">{item.projectName}</h5>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="text-xs text-red-700 font-bold block">
-                    Predicted Delay: +{item.predictedDelayMonths}m
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    Impact: ₹{item.financialImpactCr} Cr
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Text */}
-              <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 mb-3 leading-relaxed">
-                <span className="font-mono text-[#EA580C] font-bold uppercase mr-1.5">
-                  RECOMMENDED INTERVENTION:
-                </span>
-                {item.recommendedIntervention}
-              </div>
-
-              {/* Action Trigger */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
-                <span className="text-xs text-slate-500 font-mono">
-                  Dispatched to: <strong className="text-slate-800">State Chief Secretary &amp; EGoS</strong>
-                </span>
-
-                {isDone ? (
-                  <span className="text-xs text-emerald-700 font-bold flex items-center gap-1.5 font-mono">
-                    <CheckCircle2 className="w-4 h-4" /> Directive Dispatched
-                  </span>
-                ) : (
-                  <button
-                    onClick={() => handleIntervene(item.id)}
-                    className="h-9 px-4 rounded-lg bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold uppercase flex items-center gap-1.5 transition-colors shadow-2xs self-end sm:self-auto"
-                  >
-                    <span>Issue Cabinet Directive</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
+              return (
+                <tr key={item.id} style={isDone ? { backgroundColor: '#F0FDF4' } : undefined}>
+                  <td style={{ fontWeight: 700, fontSize: '13px', verticalAlign: 'middle' }}>{item.id}</td>
+                  <td style={{ verticalAlign: 'middle' }}>
+                    <strong style={{ color: '#0B3D66', fontSize: '14.5px' }}>{item.projectName}</strong>
+                  </td>
+                  <td style={{ fontSize: '14px', verticalAlign: 'middle' }}>{item.state}</td>
+                  <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                    <span className={riskClass}>{item.compositeRisk}/100</span>
+                  </td>
+                  <td style={{ fontWeight: 700, fontSize: '14px', verticalAlign: 'middle' }}>+{item.predictedDelayMonths}m</td>
+                  <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '14px', verticalAlign: 'middle' }}>₹{item.financialImpactCr} Cr</td>
+                  <td style={{ fontSize: '13px', color: '#475569', verticalAlign: 'middle' }}>
+                    <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '250px' }} title={item.recommendedIntervention}>
+                      {item.recommendedIntervention}
+                    </div>
+                  </td>
+                  <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                    {isDone ? (
+                      <span className="gov-status-completed" style={{ fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <CheckCircle2 style={{ width: '14px', height: '14px' }} /> Dispatched
+                      </span>
+                    ) : (
+                      <span className="gov-status-critical" style={{ fontSize: '12px' }}>
+                        Pending Order
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    {isDone ? (
+                      <span style={{ fontSize: '13px', color: '#059669', fontWeight: 700 }}>Issued</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleIntervene(item.id)}
+                        className="gov-flat-btn gov-flat-btn-primary"
+                        style={{ fontSize: '12px', padding: '4px 10px', height: '26px' }}
+                      >
+                        Intervene
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

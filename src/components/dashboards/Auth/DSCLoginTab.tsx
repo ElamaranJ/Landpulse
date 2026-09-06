@@ -13,18 +13,45 @@ export const DSCLoginTab: React.FC<DSCLoginTabProps> = ({
   onSuccess,
 }) => {
   const [selectedToken, setSelectedToken] = useState('emudhra-1');
-  const [dscPin, setDscPin] = useState('••••••');
+  const [dscPin, setDscPin] = useState('123456');
+  const [serverError, setServerError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleDscSubmit = (e: React.FormEvent) => {
+  const handleDscSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isDistrict = selectedToken === 'emudhra-1';
-    const targetUser = isDistrict ? DEFAULT_PERSONAS.district_officer : DEFAULT_PERSONAS.field_officer;
+    setServerError('');
+    setIsVerifying(true);
 
-    onSuccess(
-      targetUser,
-      targetUser.role,
-      `Class-3 DSC Token Authenticated. Welcome, ${targetUser.name}!`
-    );
+    try {
+      const res = await fetch('/api/auth/dsc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          certificateId: selectedToken,
+          pin: dscPin,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setServerError(data.error || 'DSC token authentication failed.');
+        return;
+      }
+
+      if (data.token) {
+        localStorage.setItem('landpulse_auth_token', data.token);
+      }
+
+      onSuccess(
+        data.user,
+        data.user.role as RoleType,
+        data.message || `Class-3 DSC Token Authenticated. Welcome, ${data.user.name}!`
+      );
+    } catch (err) {
+      setServerError('Unable to connect to cryptographic token server.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -68,19 +95,25 @@ export const DSCLoginTab: React.FC<DSCLoginTabProps> = ({
             value={dscPin}
             onChange={(e) => setDscPin(e.target.value)}
             placeholder="Enter 6-8 digit PIN"
-            className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900"
+            className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900"
           />
           <KeyRound className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
         </div>
       </div>
 
+      {serverError && (
+        <div className="p-2.5 bg-red-50 border border-red-200 rounded text-xs text-red-700 font-medium">
+          ⚠ {serverError}
+        </div>
+      )}
+
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+        disabled={isLoading || isVerifying}
+        className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded-[2px] font-bold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
       >
         <Cpu className="w-4 h-4 text-amber-300" />
-        <span>{isLoading ? 'Validating Token...' : 'Authenticate Certificate'}</span>
+        <span>{isVerifying || isLoading ? 'Validating Token...' : 'Authenticate Certificate'}</span>
       </button>
     </form>
   );

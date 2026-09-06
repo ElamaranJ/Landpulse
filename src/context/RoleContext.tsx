@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RoleType, Project, AuthUser, CriticalAlert } from '../types';
+import { Parcel } from '../types/parcel';
 import { MOCK_PROJECTS, MOCK_CRITICAL_ALERTS } from '../data/mockData';
+import { addParcels } from '../services/api';
 
 export const DEFAULT_PERSONAS: Record<string, AuthUser> = {
   command_center: {
@@ -56,6 +58,19 @@ export const DEFAULT_PERSONAS: Record<string, AuthUser> = {
     tokenType: 'DSC_SMARTCARD',
     loginTime: '28 Aug 2026, 08:20 AM',
   },
+  project_admin: {
+    id: 'USR-ADM-001',
+    name: 'Suresh Iyer, IES',
+    designation: 'Implementing Agency Nodal Officer',
+    department: 'National Highways Authority of India (NHAI)',
+    role: 'project_admin',
+    roleTitle: 'Project Implementing Agency Admin',
+    email: 'suresh.iyer@nhai.gov.in',
+    employeeId: 'NHAI-2019-0472',
+    badgeLevel: 'Class 3 DSC Authorized',
+    tokenType: 'DSC_SMARTCARD',
+    loginTime: '28 Aug 2026, 08:35 AM',
+  },
   intelligence_layer: {
     id: 'USR-INTEL-003',
     name: 'Dr. Meera Nambiar',
@@ -79,6 +94,7 @@ export const ROLE_TO_PATH: Record<RoleType, string> = {
   field_officer: '/field-officer',
   officer_inspections: '/officer/inspections',
   district_officer: '/district-officer',
+  project_admin: '/project-admin',
   intelligence_layer: '/intelligence',
   acts: '/acts',
   rti: '/rti',
@@ -94,6 +110,7 @@ export const PATH_TO_ROLE: Record<string, RoleType> = {
   '/officer/inspections': 'officer_inspections',
   '/field-officer/inspections': 'officer_inspections',
   '/district-officer': 'district_officer',
+  '/project-admin': 'project_admin',
   '/intelligence': 'intelligence_layer',
   '/acts': 'acts',
   '/rti': 'rti',
@@ -103,42 +120,92 @@ export const PATH_TO_ROLE: Record<string, RoleType> = {
 
 const USER_STORAGE_KEY = 'landpulse_current_user';
 const ROLE_STORAGE_KEY = 'landpulse_current_role';
+export const TOKEN_STORAGE_KEY = 'landpulse_auth_token';
 const LANG_STORAGE_KEY = 'landpulse_selected_language';
 const ALERTS_STORAGE_KEY = 'landpulse_alerts';
+const PROJECTS_STORAGE_KEY = 'landpulse_projects';
 
-const getInitialUser = (): AuthUser | null => {
+const getInitialProjects = (): Project[] => {
   try {
-    const saved = localStorage.getItem(USER_STORAGE_KEY);
+    const saved = localStorage.getItem(PROJECTS_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed && typeof parsed === 'object' && parsed.id && parsed.name) {
-        return parsed as AuthUser;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Sync into MOCK_PROJECTS in-memory reference
+        parsed.forEach((p: Project) => {
+          if (!MOCK_PROJECTS.some(mp => mp.id === p.id)) {
+            MOCK_PROJECTS.unshift(p);
+          }
+        });
+        return parsed as Project[];
       }
     }
   } catch (err) {
-    console.warn('Failed to load user from localStorage:', err);
+    console.warn('Failed to load projects from localStorage:', err);
   }
-  return DEFAULT_PERSONAS.command_center;
+  return MOCK_PROJECTS;
+};
+
+const getInitialUser = (): AuthUser | null => {
+  try {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (!token) {
+      // Unauthenticated visitor: do not trust unauthenticated session
+      return null;
+    }
+
+    // Decode and verify JWT token payload
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1]));
+      if (payload.exp && Date.now() >= payload.exp * 1000) {
+        // Token has expired
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        localStorage.removeItem(USER_STORAGE_KEY);
+        return null;
+      }
+
+      // Check saved user object
+      const saved = localStorage.getItem(USER_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object' && parsed.id && parsed.name) {
+          return parsed as AuthUser;
+        }
+      }
+
+      // If saved user was missing, recover from known personas
+      const persona = Object.values(DEFAULT_PERSONAS).find(
+        (p) => p.id === payload.id || p.role === payload.role
+      );
+      if (persona) return persona;
+    }
+  } catch (err) {
+    console.warn('Failed to validate auth token from localStorage:', err);
+  }
+  return null;
 };
 
 const getInitialRole = (): RoleType => {
   try {
+    const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+    if (!savedUser) {
+      return 'home';
+    }
     const saved = localStorage.getItem(ROLE_STORAGE_KEY);
-    if (saved && Object.prototype.hasOwnProperty.call(ROLE_TO_PATH, saved)) {
+    if (saved && (saved in ROLE_TO_PATH)) {
       return saved as RoleType;
     }
   } catch (err) {
     console.warn('Failed to load role from localStorage:', err);
   }
-  return 'command_center';
+  return 'home';
 };
 
 const getInitialLanguage = (): string => {
   try {
     const saved = localStorage.getItem(LANG_STORAGE_KEY);
-    if (saved) {
-      return saved;
-    }
+    if (saved) return saved;
   } catch (err) {
     console.warn('Failed to load language from localStorage:', err);
   }
@@ -163,12 +230,15 @@ const getInitialAlerts = (): CriticalAlert[] => {
 export interface RoleContextType {
   currentRole: RoleType;
   setCurrentRole: (role: RoleType) => void;
+  isAuthenticated: boolean;
   selectedState: string | null;
   setSelectedState: (stateId: string | null) => void;
   selectedProject: Project | null;
   setSelectedProject: (project: Project | null) => void;
+  projects: Project[];
+  addProject: (project: Project, newParcels?: Parcel[]) => void;
   currentUser: AuthUser | null;
-  loginUser: (user: AuthUser, redirectRole?: RoleType) => void;
+  loginUser: (user: AuthUser, redirectRole?: RoleType, token?: string) => void;
   logoutUser: () => void;
   alerts: CriticalAlert[];
   unreadAlertsCount: number;
@@ -184,12 +254,56 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const location = useLocation();
 
-  const currentRole = PATH_TO_ROLE[location.pathname] || getInitialRole();
-  const [selectedState, setSelectedState] = useState<string | null>('ST-MH');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(MOCK_PROJECTS[0]);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(getInitialUser);
+  const [currentRole, setCurrentRoleState] = useState<RoleType>(() => {
+    const user = getInitialUser();
+    if (user?.role) return user.role;
+    return getInitialRole();
+  });
+  const isAuthenticated = currentUser !== null;
+
+  const [selectedState, setSelectedState] = useState<string | null>('ST-MH');
+  const [projects, setProjects] = useState<Project[]>(getInitialProjects);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(() => projects[0] || MOCK_PROJECTS[0]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>(getInitialLanguage);
   const [alerts, setAlerts] = useState<CriticalAlert[]>(getInitialAlerts);
+
+  // Sync currentRole with route if user is navigating among allowed/public paths
+  useEffect(() => {
+    const routeRole = PATH_TO_ROLE[location.pathname];
+    if (routeRole) {
+      const publicRoles: RoleType[] = ['home', 'login', 'acts', 'rti', 'whoswho'];
+      if (publicRoles.includes(routeRole)) {
+        setCurrentRoleState(routeRole);
+      } else if (currentUser && (currentUser.role === routeRole || (currentUser.role === 'field_officer' && routeRole === 'officer_inspections'))) {
+        setCurrentRoleState(routeRole);
+      }
+    }
+  }, [location.pathname, currentUser]);
+
+  const addProject = (newProject: Project, newParcels?: Parcel[]) => {
+    setProjects((prev) => {
+      const updated = [newProject, ...prev.filter(p => p.id !== newProject.id)];
+      try {
+        localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch (err) {
+        console.warn('Failed to save projects to localStorage:', err);
+      }
+      return updated;
+    });
+
+    // Also update in-memory MOCK_PROJECTS reference
+    if (!MOCK_PROJECTS.some(p => p.id === newProject.id)) {
+      MOCK_PROJECTS.unshift(newProject);
+    }
+
+    // Register any parsed alignment parcels
+    if (newParcels && newParcels.length > 0) {
+      addParcels(newParcels);
+    }
+
+    setSelectedProject(newProject);
+  };
 
   // Derive unread alerts count dynamically from the shared alert list
   const unreadAlertsCount = useMemo(() => {
@@ -246,10 +360,33 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [selectedLanguage]);
 
+  // Verify stored JWT session against /api/auth/me on mount
+  useEffect(() => {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data.success) {
+            // Token invalidated on backend
+            logoutUser();
+          }
+        })
+        .catch((err) => {
+          console.warn('Background JWT verification skipped:', err);
+        });
+    }
+  }, []);
+
   const setCurrentRole = (role: RoleType) => {
     const targetPath = ROLE_TO_PATH[role] || '/';
+    setCurrentRoleState(role);
     try {
-      localStorage.setItem(ROLE_STORAGE_KEY, role);
+      if (currentUser) {
+        localStorage.setItem(ROLE_STORAGE_KEY, role);
+      }
     } catch (err) {
       console.warn('Failed to save role to localStorage:', err);
     }
@@ -258,8 +395,16 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginUser = (user: AuthUser, redirectRole?: RoleType) => {
+  const loginUser = (user: AuthUser, redirectRole?: RoleType, token?: string) => {
     setCurrentUser(user);
+    try {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      if (token) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      }
+    } catch (err) {
+      console.warn('Failed to save user to localStorage:', err);
+    }
     const targetRole = redirectRole || user.role || 'command_center';
     setCurrentRole(targetRole);
   };
@@ -268,10 +413,13 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser(null);
     try {
       localStorage.removeItem(USER_STORAGE_KEY);
+      localStorage.removeItem(ROLE_STORAGE_KEY);
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
     } catch (err) {
       console.warn('Failed to remove user from localStorage:', err);
     }
-    setCurrentRole('login');
+    setCurrentRoleState('home');
+    navigate('/login');
   };
 
   return (
@@ -279,10 +427,13 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentRole,
         setCurrentRole,
+        isAuthenticated,
         selectedState,
         setSelectedState,
         selectedProject,
         setSelectedProject,
+        projects,
+        addProject,
         currentUser,
         loginUser,
         logoutUser,

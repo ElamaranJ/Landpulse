@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useRole } from '../../context/RoleContext';
 import { useModals } from '../../context/ModalContext';
 import {
   UploadCloud,
@@ -9,16 +11,22 @@ import {
   Download,
   Database,
   ArrowRight,
+  ShieldAlert,
+  Lock,
 } from 'lucide-react';
 
 export const BulkLandIngestionModal: React.FC = () => {
   const { isModalOpen, closeModal } = useModals();
+  const { currentUser } = useRole();
+  const navigate = useNavigate();
 
   const [fileName, setFileName] = useState<string | null>('Palghar_Vevoor_Survey_Batches_Aug2026.xlsx');
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
   if (!isModalOpen('bulkUpload')) return null;
+
+  const isAuthorized = currentUser && currentUser.role === 'project_admin';
 
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +63,80 @@ export const BulkLandIngestionModal: React.FC = () => {
         </div>
 
         {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        {!isAuthorized ? (
+          <div className="p-6 space-y-5 bg-slate-50 overflow-y-auto">
+            <div className="bg-rose-50 border-l-4 border-rose-600 p-4 rounded-r-lg flex items-start gap-3 shadow-xs">
+              <ShieldAlert className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-rose-950 uppercase tracking-wide">
+                  Access Restricted — Statutory Admin Authorization Required
+                </h3>
+                <p className="text-xs text-rose-800 mt-0.5">
+                  Direct database ingestion of RoR cadastral records and valuation parameters requires Project Implementing Agency Admin privileges with Class 3 DSC tokens.
+                </p>
+              </div>
+            </div>
+
+            <div className="border border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs">
+              <div className="bg-[#0B3D66] text-white px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center justify-between">
+                <span>Security Clearance Audit Register</span>
+                <span className="text-[11px] font-mono text-amber-300 font-semibold">FORM SEC-403</span>
+              </div>
+              <table className="gov-stage-register">
+                <tbody>
+                  <tr>
+                    <th className="w-1/3">Required Officer Role</th>
+                    <td className="font-bold text-[#0B3D66]">
+                      Project Implementing Agency Admin (<span className="font-mono text-xs">project_admin</span>)
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Current Session Status</th>
+                    <td>
+                      {currentUser ? (
+                        <span className="text-rose-700 font-bold">
+                          {currentUser.name} ({currentUser.roleTitle}) — <span className="underline">Unauthorized Role</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 font-bold italic">
+                          Unauthenticated Visitor (Session Inactive / Public Mode)
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Statutory Governance Rule</th>
+                    <td className="text-xs text-slate-700">
+                      Direct database batch upload of RoR records and cadastral geometry is restricted to Project Implementing Agency Admins with Class 3 DSC tokens under DILRMP governance guidelines.
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Remedial Action</th>
+                    <td className="flex items-center gap-3 py-3">
+                      <button
+                        onClick={() => {
+                          closeModal('bulkUpload');
+                          navigate('/login');
+                        }}
+                        className="bg-[#0B3D66] hover:bg-[#072742] text-white font-bold px-4 py-1.5 rounded text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Log In as Authorized Admin</span>
+                      </button>
+                      <button
+                        onClick={() => closeModal('bulkUpload')}
+                        className="px-3 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer transition-colors"
+                      >
+                        Cancel &amp; Return
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 overflow-y-auto space-y-6">
           
           {uploadSuccess ? (
             <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-6 text-center space-y-4">
@@ -152,6 +233,7 @@ export const BulkLandIngestionModal: React.FC = () => {
           )}
 
         </div>
+        )}
 
         {/* Footer */}
         <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">

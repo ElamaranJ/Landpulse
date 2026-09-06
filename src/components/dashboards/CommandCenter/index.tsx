@@ -5,9 +5,11 @@ import { GeographicIntelligence } from './GeographicIntelligence';
 import { CriticalAlertsFeed } from './CriticalAlertsFeed';
 import { DashboardSearchFilterBar, StatusOption } from '../../common/DashboardSearchFilterBar';
 import { useDebounce } from '../../../hooks/useDebounce';
+import { useRole } from '../../../context/RoleContext';
 import { MOCK_PROJECTS, MOCK_CRITICAL_ALERTS } from '../../../data/mockData';
 
 export const CommandCenterDashboard: React.FC = () => {
+  const { projects } = useRole();
   // Local Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -20,6 +22,8 @@ export const CommandCenterDashboard: React.FC = () => {
     { label: 'Delayed', value: 'DELAYED' },
     { label: 'Critical Risk', value: 'CRITICAL' },
   ];
+
+  const projectCount = projects?.length || MOCK_PROJECTS.length;
 
   return (
     <div className="space-y-6">
@@ -36,7 +40,7 @@ export const CommandCenterDashboard: React.FC = () => {
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
         statusOptions={statusOptions}
-        totalCount={MOCK_PROJECTS.length + MOCK_CRITICAL_ALERTS.length}
+        totalCount={projectCount + MOCK_CRITICAL_ALERTS.length}
       />
 
       <GeographicIntelligence

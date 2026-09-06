@@ -4,16 +4,8 @@ import {
   Search,
   X,
   CheckCircle2,
-  Clock,
-  FileText,
-  AlertCircle,
-  Download,
-  Building,
   MapPin,
-  Calendar,
-  Share2,
-  Printer,
-  ShieldCheck,
+  Download,
 } from 'lucide-react';
 
 export const CaseTrackerModal: React.FC = () => {
@@ -91,128 +83,145 @@ export const CaseTrackerModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden p-6 sm:p-8 relative my-auto">
         
         {/* Header */}
-        <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg">
-              <Search className="w-6 h-6 text-amber-300" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold">Track Land Acquisition Case Status</h2>
-              <p className="text-xs text-blue-200">
-                National Unified Registry • DoLR Central MIS • Direct PFMS DBT Sync
-              </p>
-            </div>
+        <div className="flex items-start justify-between pb-3">
+          <div>
+            <h2 className="text-2xl sm:text-[26px] font-bold text-[#0F172A] tracking-tight">
+              Track Land Acquisition Case Status
+            </h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              National Unified Registry • DoLR Central MIS • Direct PFMS DBT Sync
+            </p>
           </div>
           <button
             onClick={() => closeModal('caseTracker')}
-            className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="space-y-6 mt-4">
           
-          {/* Search Input Bar */}
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Enter Acquisition Case ID (e.g. MH-PAL-2024-8821), Survey No (142/3A), or Khata No"
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0B3D66] focus:bg-white font-mono font-bold text-slate-800"
-              />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          {/* Section 1: Search */}
+          <div>
+            <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+              <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                1
+              </div>
+              <span className="font-bold text-sm text-[#1E293B]">Case Search &amp; Identification</span>
             </div>
-            <button
-              type="submit"
-              className="px-5 py-2.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
-            >
-              Search Case
-            </button>
-          </form>
+
+            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter Case ID (e.g. MH-PAL-2024-8821), Survey No (142/3A), or Khata No"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#1E4D79] focus:ring-1 focus:ring-[#1E4D79] font-mono text-slate-900"
+                />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              </div>
+              <button
+                type="submit"
+                className="px-7 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
+              >
+                Search Case
+              </button>
+            </form>
+          </div>
 
           {hasSearched && (
             <div className="space-y-6">
-              {/* Summary Card */}
-              <div className="bg-[#F8FAFC] border border-slate-300 rounded-xl p-5 shadow-xs">
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+              
+              {/* Section 2: Case Dossier & Valuation */}
+              <div>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    2
+                  </div>
+                  <span className="font-bold text-sm text-[#1E293B]">Case Dossier &amp; Valuation Details</span>
+                </div>
+
+                {/* Disbursal Green Box */}
+                <div className="bg-[#F0F9F2] border border-[#CDEEDB] rounded-xl p-5 sm:p-6 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-blue-100 text-blue-800 text-xs font-mono font-bold px-2 py-0.5 rounded">
-                        CASE: {caseData.caseId}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="bg-[#1E436C] text-white text-[11px] font-mono font-bold px-2.5 py-0.5 rounded">
+                        CASE #{caseData.caseId}
                       </span>
-                      <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                      <span className="bg-emerald-100 text-[#0D6832] text-xs font-bold px-2.5 py-0.5 rounded flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Award Disbursed (PFMS DBT)
                       </span>
                     </div>
-                    <h3 className="text-base font-extrabold text-slate-900 mt-1">
+                    <h3 className="text-lg font-bold text-[#1E293B] mt-1">
                       {caseData.landowner}
                     </h3>
                     <p className="text-xs text-slate-600 flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3.5 h-3.5 text-slate-500" /> {caseData.village}, {caseData.district}
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" /> {caseData.village}, {caseData.district}
                     </p>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-xs text-slate-500">Total Statutory Award</div>
-                    <div className="text-2xl font-extrabold text-[#0B3D66] font-mono">
+                  <div className="sm:text-right">
+                    <div className="text-xs text-slate-500 font-medium">Total Statutory Award</div>
+                    <div className="text-3xl font-extrabold text-[#0D6832] font-sans">
                       ₹{caseData.valuationCr} Cr
                     </div>
-                    <div className="text-[11px] text-emerald-700 font-bold">100% PFMS DBT Disbursed</div>
+                    <div className="text-xs text-[#0D6832] font-semibold mt-0.5">100% PFMS DBT Disbursed</div>
                   </div>
                 </div>
 
-                {/* Key Attributes Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
+                {/* Attributes Table Card */}
+                <div className="bg-white border border-slate-200/90 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs shadow-2xs">
                   <div>
-                    <span className="text-slate-500 block">Survey / Plot No:</span>
+                    <span className="text-slate-500 block mb-0.5">Survey / Plot No:</span>
                     <strong className="text-slate-900 font-mono text-sm">{caseData.surveyNumber}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Khata Account:</span>
-                    <strong className="text-slate-900 font-mono">{caseData.khataNumber}</strong>
+                    <span className="text-slate-500 block mb-0.5">Khata Account:</span>
+                    <strong className="text-slate-900 font-mono text-sm">{caseData.khataNumber}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Acquired Land Area:</span>
+                    <span className="text-slate-500 block mb-0.5">Acquired Land Area:</span>
                     <strong className="text-slate-900">{caseData.landAreaAcres} Acres ({caseData.landType})</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Competent Authority (CALA):</span>
+                    <span className="text-slate-500 block mb-0.5">Competent Authority (CALA):</span>
                     <strong className="text-slate-900">{caseData.calaOfficer}</strong>
                   </div>
                 </div>
               </div>
 
-              {/* 5-Stage Statutory Progress Flow */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  RFCTLARR Statutory Progress Lifecycle
-                </h4>
+              {/* Section 3: Statutory Stages */}
+              <div>
+                <div className="bg-[#EEF3F8] rounded-lg px-4 py-2 flex items-center gap-3 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1E436C] text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    3
+                  </div>
+                  <span className="font-bold text-sm text-[#1E293B]">RFCTLARR Statutory Progress Lifecycle</span>
+                </div>
 
-                <div className="relative pl-6 border-l-2 border-emerald-500 space-y-5">
+                <div className="space-y-3">
                   {caseData.stages.map((stg) => (
-                    <div key={stg.step} className="relative group">
-                      {/* Step node icon */}
-                      <div className="absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                    <div key={stg.step} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                         ✓
                       </div>
-
-                      <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs hover:border-blue-400 transition-colors">
+                      <div className="flex-1">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <h5 className="text-xs font-bold text-slate-900">{stg.title}</h5>
-                          <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                          <h5 className="text-sm font-bold text-[#1E293B]">{stg.title}</h5>
+                          <span className="text-xs font-mono text-slate-500 bg-white border border-slate-200 px-2.5 py-0.5 rounded">
                             {stg.date}
                           </span>
                         </div>
                         {stg.gazetteRef && (
-                          <p className="text-xs text-blue-700 font-mono mt-1">{stg.gazetteRef}</p>
+                          <p className="text-xs text-[#1E4D79] font-mono mt-1">{stg.gazetteRef}</p>
                         )}
                         {stg.notes && (
                           <p className="text-xs text-slate-600 mt-1">{stg.notes}</p>
@@ -222,20 +231,21 @@ export const CaseTrackerModal: React.FC = () => {
                   ))}
                 </div>
               </div>
+
             </div>
           )}
 
         </div>
 
-        {/* Footer Actions */}
-        <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        {/* Bottom Actions */}
+        <div className="flex items-center justify-between pt-6 mt-6 border-t border-slate-100">
+          <div className="flex items-center gap-3 text-xs">
             <button
               onClick={() => {
                 closeModal('caseTracker');
                 openModal('grievance');
               }}
-              className="text-xs text-[#0B3D66] font-bold hover:underline"
+              className="text-[#1E4D79] font-bold hover:underline cursor-pointer"
             >
               Lodge Section 15 Objection
             </button>
@@ -245,22 +255,24 @@ export const CaseTrackerModal: React.FC = () => {
                 closeModal('caseTracker');
                 openModal('calc');
               }}
-              className="text-xs text-[#0B3D66] font-bold hover:underline"
+              className="text-[#1E4D79] font-bold hover:underline cursor-pointer"
             >
-              Re-calculate Solatium
+              Recalculate Compensation
             </button>
           </div>
 
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={() => alert('Downloading Official Case Status Receipt (PDF)')}
-              className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded flex items-center gap-1.5 shadow-xs"
+              className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 font-semibold text-sm rounded-lg hover:bg-slate-50 shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5" /> Download Case Receipt
+              <Download className="w-4 h-4" /> Download Receipt
             </button>
             <button
+              type="button"
               onClick={() => closeModal('caseTracker')}
-              className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded"
+              className="px-8 py-2.5 bg-[#1E4D79] hover:bg-[#163B5F] text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
             >
               Close
             </button>

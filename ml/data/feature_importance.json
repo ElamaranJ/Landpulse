@@ -1,0 +1,38 @@
+{
+  "columns": [
+    "stage_duration_days",
+    "objection_count",
+    "has_dispute",
+    "area_acres",
+    "owner_count",
+    "distance_from_hq_km",
+    "district_Ahmedabad",
+    "district_Dankuni",
+    "district_Gautam Buddha Nagar",
+    "district_Hooghly",
+    "district_Navsari",
+    "district_Palghar",
+    "district_Panna",
+    "district_Raigad",
+    "district_Sonnagar",
+    "district_Surat",
+    "district_Thane",
+    "district_Valsad",
+    "project_category_Aviation",
+    "project_category_Energy",
+    "project_category_Highways",
+    "project_category_Industrial",
+    "project_category_Railways",
+    "project_category_Water",
+    "land_category_agricultural",
+    "land_category_commercial",
+    "land_category_residential"
+  ],
+  "factors": [
+    "Active ownership dispute or title contestation",
+    "High Section 15 citizen objection density",
+    "Prolonged milestone delay beyond statutory limits",
+    "High joint-titleholder fragmentation",
+    "Remote site distance from sub-divisional headquarters"
+  ]
+}

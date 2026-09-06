@@ -42,12 +42,12 @@ export const GPSCaptureSimulator: React.FC<GPSCaptureSimulatorProps> = ({
   const currentLng = capturedWaypoints[capturedWaypoints.length - 1]?.lng || 72.7663;
 
   return (
-    <div className="gov-card p-6 sm:p-7 mb-8">
+    <div style={{ border: '1px solid #CBD5E1', borderRadius: '2px', backgroundColor: '#FFFFFF', padding: '14px 16px', marginBottom: '12px' }}>
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" style={{ paddingBottom: '8px', marginBottom: '10px', borderBottom: '2px solid #0B3D66' }}>
         <div>
           <div className="flex items-center gap-2.5">
-            <h3 className="text-lg sm:text-xl font-bold text-[#0B3D66] font-sans tracking-tight">
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0B3D66' }}>
               NavIC DGPS Cadastral Boundary Logger
             </h3>
             <span className="gov-badge gov-badge-info">RTK SUB-METER</span>
@@ -65,46 +65,53 @@ export const GPSCaptureSimulator: React.FC<GPSCaptureSimulatorProps> = ({
 
       <div className="space-y-6">
         {/* Main High-Contrast GPS Coordinate Display Box */}
-        <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-6">
-          <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-200/80 mb-4 gap-2">
-            <span className="text-xs font-bold text-slate-600 uppercase font-mono">
-              Target Parcel: <strong className="text-[#0B3D66] text-sm font-bold">Survey #{parcel.surveyNumber} ({parcel.village})</strong>
-            </span>
-            <span className="gov-badge gov-badge-success">
-              Cadastral Area: {parcel.areaAcre} Acres
-            </span>
+        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '2px', padding: '14px' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="gov-facts-table gov-facts-table-striped" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '32%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '32%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ width: '18%' }}>FIELD</th>
+                  <th style={{ width: '32%' }}>VALUE</th>
+                  <th style={{ width: '18%' }}>FIELD</th>
+                  <th style={{ width: '32%' }}>VALUE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="fact-label">Target Parcel</td>
+                  <td className="fact-value">Survey #{parcel.surveyNumber} ({parcel.village})</td>
+                  <td className="fact-label">Cadastral Area</td>
+                  <td className="fact-value">{parcel.areaAcre} Acres</td>
+                </tr>
+                <tr>
+                  <td className="fact-label">Latitude Coordinate</td>
+                  <td className="fact-value" style={{ fontSize: '15px' }}>{currentLat.toFixed(4)}° N</td>
+                  <td className="fact-label">Longitude Coordinate</td>
+                  <td className="fact-value" style={{ fontSize: '15px' }}>{currentLng.toFixed(4)}° E</td>
+                </tr>
+                <tr>
+                  <td className="fact-label">Datum</td>
+                  <td className="fact-value">WGS84 High Precision Fix</td>
+                  <td className="fact-label">Carrier Phase</td>
+                  <td className="fact-value">NavIC IRNSS Fixed</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {/* Latitude Readout */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-2xs">
-              <span className="text-xs font-bold text-slate-400 uppercase font-mono block">Latitude Coordinate</span>
-              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B3D66] font-mono tracking-tight block my-2">
-                {currentLat.toFixed(4)}° N
-              </span>
-              <span className="text-xs text-slate-500 font-mono">WGS84 Datum • High Precision Fix</span>
-            </div>
-
-            {/* Longitude Readout */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 text-center shadow-2xs">
-              <span className="text-xs font-bold text-slate-400 uppercase font-mono block">Longitude Coordinate</span>
-              <span className="text-3xl sm:text-4xl font-extrabold text-[#0B3D66] font-mono tracking-tight block my-2">
-                {currentLng.toFixed(4)}° E
-              </span>
-              <span className="text-xs text-slate-500 font-mono">NavIC IRNSS Fixed Carrier Phase</span>
-            </div>
-          </div>
-
-          {/* Big High-Contrast Outdoor Trigger Button */}
-          <div className="mt-6">
+          {/* Capture Button */}
+          <div style={{ marginTop: '14px' }}>
             <button
               onClick={handleCapturePoint}
               disabled={isCapturing}
-              className={`w-full py-4 px-6 rounded-xl font-bold text-base uppercase flex items-center justify-center gap-2.5 transition-all shadow-xs ${
-                isCapturing
-                  ? 'bg-amber-600 text-white cursor-wait'
-                  : 'bg-[#EA580C] hover:bg-[#C2410C] text-white active:scale-[0.99]'
-              }`}
+              className={`w-full gov-flat-btn ${isCapturing ? 'gov-flat-btn-secondary' : 'gov-flat-btn-orange'}`}
+              style={{ justifyContent: 'center', padding: '10px 16px', fontSize: '13px' }}
             >
               {isCapturing ? (
                 <>
@@ -125,49 +132,57 @@ export const GPSCaptureSimulator: React.FC<GPSCaptureSimulatorProps> = ({
         </div>
 
         {/* Recorded Polygon Perimeter Peg Table */}
-        <div className="gov-table-wrapper">
-          <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700 uppercase font-mono">
-              Recorded Perimeter Pegs ({capturedWaypoints.length} nodes captured)
+        <div style={{ border: '1px solid #CBD5E1', borderRadius: '2px', backgroundColor: '#FFFFFF', overflow: 'hidden' }}>
+          <div className="gov-section-divider" style={{ padding: '8px 12px', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span className="section-label">
+              RECORDED PERIMETER PEGS ({capturedWaypoints.length} NODES CAPTURED)
             </span>
-            <span className="gov-badge gov-badge-success text-xs">
+            <span className="gov-status-completed" style={{ fontSize: '11px' }}>
               Closure Error: 0.02m (Pass)
             </span>
           </div>
 
-          <table className="gov-table">
-            <thead>
-              <tr>
-                <th>Peg #</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Timestamp</th>
-                <th>RTK Fix Quality</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {capturedWaypoints.map((wp) => (
-                <tr key={wp.id}>
-                  <td className="font-mono font-bold text-[#0B3D66]">Peg #{wp.id}</td>
-                  <td className="font-mono font-bold text-slate-900">{wp.lat}° N</td>
-                  <td className="font-mono font-bold text-slate-900">{wp.lng}° E</td>
-                  <td className="font-mono text-slate-600">{wp.time}</td>
-                  <td>
-                    <span className="gov-badge gov-badge-success">
-                      FIXED (0.48m)
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-xs font-bold text-emerald-700 flex items-center gap-1.5 font-mono">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Recorded
-                    </span>
-                  </td>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="gov-stage-register" style={{ fontSize: '12px', tableLayout: 'fixed', width: '100%' }}>
+              <colgroup>
+                <col style={{ width: '80px' }} />
+                <col style={{ width: '120px' }} />
+                <col style={{ width: '120px' }} />
+                <col style={{ width: '100px' }} />
+                <col style={{ width: '120px' }} />
+                <col style={{ width: '90px' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style={{ width: '80px' }}>Peg #</th>
+                  <th style={{ width: '120px' }}>Latitude</th>
+                  <th style={{ width: '120px' }}>Longitude</th>
+                  <th style={{ width: '100px' }}>Timestamp</th>
+                  <th style={{ width: '120px' }}>RTK Fix</th>
+                  <th style={{ width: '90px', textAlign: 'center' }}>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {capturedWaypoints.map((wp) => (
+                  <tr key={wp.id}>
+                    <td style={{ fontWeight: 700, color: '#0B3D66', verticalAlign: 'middle' }}>Peg #{wp.id}</td>
+                    <td style={{ fontWeight: 600, color: '#0F172A', verticalAlign: 'middle' }}>{wp.lat}° N</td>
+                    <td style={{ fontWeight: 600, color: '#0F172A', verticalAlign: 'middle' }}>{wp.lng}° E</td>
+                    <td style={{ fontSize: '11.5px', color: '#64748B', verticalAlign: 'middle' }}>{wp.time}</td>
+                    <td style={{ fontSize: '11.5px', verticalAlign: 'middle' }}>
+                      <span className="gov-status-completed">Fixed (0.48m)</span>
+                    </td>
+                    <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                      <span className="gov-status-completed" style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Recorded
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

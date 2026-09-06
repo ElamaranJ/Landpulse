@@ -6,7 +6,8 @@ import {
   Marker,
   Popup,
   Polyline,
-  useMap
+  useMap,
+  useMapEvents
 } from 'react-leaflet';
 import L from 'leaflet';
 import { Parcel, ParcelStatus } from '../../types/parcel';
@@ -16,12 +17,8 @@ import {
   AlertTriangle,
   Compass,
   Navigation,
-  ExternalLink,
-  ShieldAlert,
   CheckCircle2,
-  Clock,
-  Eye,
-  Maximize2
+  Eye
 } from 'lucide-react';
 
 export interface ParcelMapProps {
@@ -36,59 +33,65 @@ export interface ParcelMapProps {
   height?: string;
   showLegend?: boolean;
   showControls?: boolean;
+  straightPath?: [number, number][];
+  optimizedPath?: [number, number][];
+  alignmentOrigin?: [number, number];
+  alignmentDestination?: [number, number];
+  onMapClickForCoords?: (lat: number, lng: number) => void;
 }
 
 // Status styling configuration
-const STATUS_COLORS: Record<ParcelStatus, { fill: string; stroke: string; label: string; bgClass: string }> = {
+const STATUS_COLORS: Record<ParcelStatus, { fill: string; stroke: string; label: string }> = {
   completed: {
     fill: '#22c55e',
     stroke: '#16a34a',
-    label: 'Completed / Acquired',
-    bgClass: 'bg-emerald-500'
+    label: 'Completed / Acquired'
   },
   in_progress: {
     fill: '#eab308',
     stroke: '#ca8a04',
-    label: 'In Progress / Valuation',
-    bgClass: 'bg-amber-500'
+    label: 'In Progress / Valuation'
   },
   dispute: {
     fill: '#ef4444',
     stroke: '#dc2626',
-    label: 'Dispute / Litigated',
-    bgClass: 'bg-rose-500'
+    label: 'Dispute / Litigated'
   },
   not_started: {
-    fill: '#9ca3af',
-    stroke: '#6b7280',
-    label: 'Not Started / Pending',
-    bgClass: 'bg-slate-400'
+    fill: '#94a3b8',
+    stroke: '#64748b',
+    label: 'Not Started / Pending'
   }
 };
 
 // Create custom pulsing Leaflet DivIcon for inspection badges
 const createInspectionIcon = (priority: 'high' | 'medium' | 'low', surveyNo: string) => {
+  const badgeColor =
+    priority === 'high'
+      ? 'background-color: #dc2626; color: #ffffff;'
+      : priority === 'medium'
+      ? 'background-color: #d97706; color: #ffffff;'
+      : 'background-color: #2563eb; color: #ffffff;';
+
   const pulseClass =
     priority === 'high'
-      ? 'map-inspection-pulse-high bg-rose-600 border-white text-white ring-4 ring-rose-400/40'
+      ? 'map-inspection-pulse-high'
       : priority === 'medium'
-      ? 'map-inspection-pulse-medium bg-amber-500 border-white text-white ring-4 ring-amber-400/40'
-      : 'map-inspection-pulse-low bg-blue-600 border-white text-white ring-4 ring-blue-400/40';
-
-  const badgeText = priority === 'high' ? '🔴' : priority === 'medium' ? '🟡' : '🔵';
+      ? 'map-inspection-pulse-medium'
+      : 'map-inspection-pulse-low';
 
   return L.divIcon({
     className: 'custom-inspection-pin',
     html: `
       <div style="position: relative; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -50%);">
-        <div class="flex items-center gap-1 px-2 py-1 rounded-full shadow-2xl border-2 font-bold text-xs tracking-tight ${pulseClass}" style="backdrop-filter: blur(4px);">
-          <span style="font-size: 11px;">${badgeText}</span>
-          <span style="font-size: 10px; font-weight: 800; font-family: 'JetBrains Mono', monospace;">${surveyNo}</span>
+        <div class="${pulseClass}" style="${badgeColor} padding: 2px 6px; border: 1.5px solid #ffffff; border-radius: 3px; font-weight: bold; font-size: 10px; font-family: Arial, sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 3px; white-space: nowrap;">
+          <span>⚠️</span>
+          <span>${surveyNo}</span>
         </div>
       </div>
     `,
-    iconSize: [80, 30],
-    iconAnchor: [40, 15]
+    iconSize: [75, 24],
+    iconAnchor: [37, 12]
   });
 };
 
@@ -98,17 +101,41 @@ const createOfficerIcon = () => {
     className: 'custom-officer-pin',
     html: `
       <div style="position: relative; display: flex; align-items: center; justify-content: center; transform: translate(-50%, -50%);">
-        <div class="w-7 h-7 rounded-full bg-blue-600 border-2 border-white shadow-xl flex items-center justify-center text-white map-officer-radar">
-          <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
+        <div class="map-officer-radar" style="width: 22px; height: 22px; border-radius: 50%; background-color: #0B3D66; border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+          <div style="width: 6px; height: 6px; background-color: #ffffff; border-radius: 50%;"></div>
         </div>
       </div>
     `,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14]
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
   });
 };
 
-// Map controller component for smooth programmatic panning and zooming
+// Create endpoint marker pin (A for Origin, B for Destination)
+const createEndpointIcon = (label: string, color: string) => {
+  return L.divIcon({
+    className: 'custom-endpoint-pin',
+    html: `
+      <div style="background-color: ${color}; color: #ffffff; width: 22px; height: 22px; border-radius: 2px; border: 2px solid #ffffff; font-weight: bold; font-size: 11px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.4); font-family: Arial, sans-serif;">
+        ${label}
+      </div>
+    `,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11]
+  });
+};
+
+function MapClickHandler({ onClick }: { onClick?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      if (onClick) {
+        onClick(e.latlng.lat, e.latlng.lng);
+      }
+    }
+  });
+  return null;
+}
+
 const MapFocusController: React.FC<{
   targetCentroid?: [number, number] | null;
   targetBounds?: [number, number][] | null;
@@ -120,14 +147,14 @@ const MapFocusController: React.FC<{
     if (targetBounds && targetBounds.length > 0) {
       const bounds = L.latLngBounds(targetBounds.map(pt => L.latLng(pt[0], pt[1])));
       map.flyToBounds(bounds, {
-        padding: [60, 60],
-        duration: 1.2,
+        padding: [50, 50],
+        duration: 1.0,
         easeLinearity: 0.25,
         maxZoom: 18
       });
     } else if (targetCentroid) {
       map.flyTo(targetCentroid, forceZoom, {
-        duration: 1.2,
+        duration: 1.0,
         easeLinearity: 0.25
       });
     }
@@ -147,21 +174,25 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
   className = '',
   height = '100%',
   showLegend = true,
-  showControls = true
+  showControls = true,
+  straightPath,
+  optimizedPath,
+  alignmentOrigin,
+  alignmentDestination,
+  onMapClickForCoords
 }) => {
   const [activeLayer, setActiveLayer] = useState<'satellite' | 'street'>(defaultLayer);
   const [hoveredParcelId, setHoveredParcelId] = useState<string | null>(null);
   const [activeParcel, setActiveParcel] = useState<Parcel | null>(null);
   const popupRef = useRef<L.Popup | null>(null);
 
-  // Sync active parcel with props
   const effectiveSelectedId = highlightParcelId || selectedParcelId || activeParcel?.id;
   const currentParcel = parcels.find(p => p.id === effectiveSelectedId) || null;
 
-  // Initial centroid fallback: first parcel or Vellore/Ranipet corridor default
   const defaultCenter: [number, number] =
     currentParcel?.centroid ||
-    (parcels.length > 0 ? parcels[0].centroid : [12.9290, 79.1444]);
+    alignmentOrigin ||
+    (parcels.length > 0 ? parcels[0].centroid : [19.7120, 72.8250]);
 
   const handlePolygonClick = (parcel: Parcel) => {
     setActiveParcel(parcel);
@@ -178,25 +209,23 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
     }
   };
 
-  // Google Maps navigation direction URL
   const getGoogleMapsNavUrl = (centroid: [number, number]) => {
     return `https://www.google.com/maps/dir/?api=1&destination=${centroid[0]},${centroid[1]}`;
   };
 
   return (
-    <div className={`relative w-full overflow-hidden rounded-xl border border-slate-700/60 shadow-2xl bg-slate-900 ${className}`} style={{ height }}>
-      {/* ── Top Layer & Basemap Switcher Control ── */}
+    <div className={`relative w-full overflow-hidden border border-slate-300 bg-white font-sans ${className}`} style={{ height }}>
+      {/* ── Top Layer Switcher ── */}
       {showControls && (
-        <div className="absolute top-4 right-4 z-[1000] flex items-center gap-1.5 p-1 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/80 shadow-2xl text-xs font-semibold">
+        <div className="absolute top-3 right-3 z-[1000] flex items-center bg-white border border-slate-300 rounded shadow-sm text-xs font-bold p-0.5">
           <button
             type="button"
             onClick={() => setActiveLayer('street')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1 rounded-xs transition-all cursor-pointer flex items-center gap-1.5 ${
               activeLayer === 'street'
-                ? 'bg-blue-600 text-white shadow-md font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                ? 'bg-[#0B3D66] text-white shadow-xs'
+                : 'text-slate-700 hover:bg-slate-100'
             }`}
-            title="Switch to OpenStreetMap Street View"
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Street View</span>
@@ -204,56 +233,52 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
           <button
             type="button"
             onClick={() => setActiveLayer('satellite')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`px-3 py-1 rounded-xs transition-all cursor-pointer flex items-center gap-1.5 ${
               activeLayer === 'satellite'
-                ? 'bg-emerald-600 text-white shadow-md font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                ? 'bg-[#0B3D66] text-white shadow-xs'
+                : 'text-slate-700 hover:bg-slate-100'
             }`}
-            title="Switch to Esri High-Resolution Satellite Imagery"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span>Satellite View</span>
           </button>
         </div>
       )}
 
-      {/* ── Active Layer Indicator Badge ── */}
-      <div className="absolute top-4 left-4 z-[1000] hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 backdrop-blur-md border border-slate-700/70 text-slate-200 text-xs shadow-lg">
-        <Compass className="w-3.5 h-3.5 text-blue-400 animate-spin-slow" />
-        <span className="font-medium text-slate-300">
-          Layer: <strong className="text-white capitalize">{activeLayer === 'satellite' ? 'Esri Satellite Imagery' : 'OpenStreetMap'}</strong>
+      {/* ── Active Layer Indicator ── */}
+      <div className="absolute top-3 left-3 z-[1000] hidden sm:flex items-center gap-2 px-2.5 py-1 bg-white border border-slate-300 text-xs shadow-sm rounded text-slate-700 font-bold">
+        <Compass className="w-3.5 h-3.5 text-[#0B3D66]" />
+        <span>
+          Basemap: <strong className="text-[#0B3D66]">{activeLayer === 'satellite' ? 'Esri Satellite Imagery' : 'OpenStreetMap'}</strong>
         </span>
-        <span className="text-slate-500">|</span>
-        <span className="text-slate-400 font-mono text-[11px]">{parcels.length} GIS Polygons</span>
+        <span className="text-slate-400">|</span>
+        <span className="text-slate-600 font-mono text-[11px]">{parcels.length} Polygons</span>
       </div>
 
-      {/* ── React Leaflet Map Container ── */}
+      {/* ── Map Container ── */}
       <MapContainer
         center={defaultCenter}
         zoom={14}
         scrollWheelZoom={true}
-        style={{ height: '100%', width: '100%', background: '#0f172a' }}
+        style={{ height: '100%', width: '100%', background: '#F1F5F9' }}
         attributionControl={false}
       >
-        {/* Layer 1: Street View (OpenStreetMap) */}
         {activeLayer === 'street' && (
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             maxZoom={19}
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution='&copy; OpenStreetMap'
           />
         )}
 
-        {/* Layer 2: Satellite View (Esri World Imagery) */}
         {activeLayer === 'satellite' && (
           <TileLayer
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             maxZoom={19}
-            attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            attribution='Tiles &copy; Esri'
           />
         )}
 
-        {/* Auto Focus / Pan Controller */}
         {currentParcel && (
           <MapFocusController
             targetCentroid={currentParcel.centroid}
@@ -261,7 +286,6 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
           />
         )}
 
-        {/* ── Parcel Polygons ── */}
         {parcels.map(parcel => {
           const isSelected = parcel.id === effectiveSelectedId;
           const isHovered = parcel.id === hoveredParcelId;
@@ -272,10 +296,10 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
               key={parcel.id}
               positions={parcel.coordinates}
               pathOptions={{
-                color: isSelected ? '#38bdf8' : statusStyle.stroke,
+                color: isSelected ? '#0284c7' : statusStyle.stroke,
                 fillColor: statusStyle.fill,
-                fillOpacity: isSelected ? 0.75 : isHovered ? 0.65 : 0.45,
-                weight: isSelected ? 4 : isHovered ? 3 : 2,
+                fillOpacity: isSelected ? 0.7 : isHovered ? 0.6 : 0.45,
+                weight: isSelected ? 3.5 : isHovered ? 2.5 : 1.5,
                 dashArray: parcel.status === 'not_started' ? '4, 4' : undefined
               }}
               eventHandlers={{
@@ -286,84 +310,66 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
             >
               <Popup
                 ref={popupRef}
-                className="custom-leaflet-popup"
-                minWidth={280}
+                minWidth={260}
               >
-                <div className="p-4 bg-slate-900 text-slate-100 rounded-xl">
-                  {/* Header with Survey No & Status */}
-                  <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-2.5 mb-3">
+                <div className="p-3 bg-white text-slate-800 rounded font-sans text-xs">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-1.5 mb-2">
                     <div>
-                      <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                        Survey Number
-                      </div>
-                      <div className="text-lg font-black text-white font-mono flex items-center gap-1.5">
-                        <MapPin className="w-4 h-4 text-blue-400" />
-                        {parcel.surveyNo}
+                      <span className="text-[10px] uppercase font-bold text-slate-500">Cadastral Parcel</span>
+                      <div className="text-sm font-bold text-[#0B3D66] font-mono">
+                        Survey No: {parcel.surveyNo}
                       </div>
                     </div>
                     <span
-                      className="px-2.5 py-1 rounded-md text-[11px] font-bold text-white shadow-sm capitalize"
+                      className="px-2 py-0.5 rounded-xs text-[10px] font-bold text-white uppercase"
                       style={{ backgroundColor: statusStyle.stroke }}
                     >
                       {parcel.status.replace('_', ' ')}
                     </span>
                   </div>
 
-                  {/* Parcel Details Grid */}
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between py-0.5 text-slate-300">
-                      <span className="text-slate-400 font-medium">Landowner:</span>
-                      <span className="font-semibold text-white">{parcel.owner}</span>
+                  <div className="space-y-1 text-slate-700 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Landowner:</span>
+                      <strong className="text-slate-900">{parcel.owner}</strong>
                     </div>
-                    <div className="flex justify-between py-0.5 text-slate-300">
-                      <span className="text-slate-400 font-medium">Area / Extent:</span>
-                      <span className="font-bold text-emerald-400 font-mono">{parcel.area}</span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Area:</span>
+                      <strong className="text-slate-900 font-mono">{parcel.area}</strong>
                     </div>
-                    <div className="flex justify-between py-0.5 text-slate-300">
-                      <span className="text-slate-400 font-medium">District:</span>
-                      <span className="font-medium text-slate-200">{parcel.district}</span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">District:</span>
+                      <span>{parcel.district}</span>
                     </div>
-                    <div className="flex justify-between py-0.5 text-slate-300">
-                      <span className="text-slate-400 font-medium">Project:</span>
-                      <span className="font-medium text-slate-200 text-right truncate max-w-[140px]" title={parcel.project}>
-                        {parcel.project}
-                      </span>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Project:</span>
+                      <span className="truncate max-w-[130px]">{parcel.project}</span>
                     </div>
 
-                    {/* Inspection Notification Banner */}
                     {parcel.inspection?.required && (
-                      <div className="mt-3 p-2.5 rounded-lg bg-rose-950/80 border border-rose-600/50 text-rose-200">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-rose-400 uppercase tracking-wide">
-                          <AlertTriangle className="w-3.5 h-3.5" />
-                          Inspection Flag ({parcel.inspection.priority} Priority)
-                        </div>
-                        <p className="mt-1 text-[11px] leading-relaxed text-rose-100 line-clamp-2">
-                          {parcel.inspection.reason}
-                        </p>
-                        <div className="mt-1.5 text-[10px] text-rose-300 font-mono">
-                          Due: {parcel.inspection.dueDate}
-                        </div>
+                      <div className="mt-2 p-1.5 bg-red-50 border border-red-200 rounded text-[11px] text-red-900">
+                        <strong>Inspection Required ({parcel.inspection.priority}):</strong>
+                        <p className="mt-0.5">{parcel.inspection.reason}</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="mt-4 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+                  <div className="mt-3 pt-2 border-t border-slate-200 grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => handleViewSatellite(parcel)}
-                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md transition-colors cursor-pointer"
+                      className="gov-btn-secondary text-[11px] py-1 cursor-pointer justify-center"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Eye className="w-3 h-3" />
                       <span>Satellite</span>
                     </button>
                     <a
                       href={getGoogleMapsNavUrl(parcel.centroid)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md transition-colors cursor-pointer"
+                      className="gov-btn-primary text-[11px] py-1 cursor-pointer justify-center"
                     >
-                      <Navigation className="w-3.5 h-3.5" />
+                      <Navigation className="w-3 h-3" />
                       <span>Navigate</span>
                     </a>
                   </div>
@@ -373,7 +379,6 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
           );
         })}
 
-        {/* ── Pulsing Inspection Badges on Centroids ── */}
         {parcels
           .filter(p => p.inspection?.required)
           .map(parcel => (
@@ -387,73 +392,140 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
             />
           ))}
 
-        {/* ── Officer Live GPS Location Pin ── */}
         {officerLocation && (
           <Marker
             position={officerLocation}
             icon={createOfficerIcon()}
           >
             <Popup>
-              <div className="p-2 text-center text-slate-900 font-semibold text-xs">
-                📍 Field Officer Current Live GPS Position
+              <div className="p-1 text-center font-bold text-xs text-[#0B3D66]">
+                📍 Field Officer Current Location
               </div>
             </Popup>
           </Marker>
         )}
 
-        {/* ── Live Route Polyline connecting Officer to Target Parcel ── */}
         {showRouteToSelected && officerLocation && currentParcel && (
           <Polyline
             positions={[officerLocation, currentParcel.centroid]}
             pathOptions={{
-              color: '#38bdf8',
-              weight: 3,
-              dashArray: '6, 8',
-              opacity: 0.9
+              color: '#0B3D66',
+              weight: 2.5,
+              dashArray: '5, 5',
+              opacity: 0.8
             }}
           />
         )}
+
+        {/* ── Least-Cost Corridor Alignment Polylines ── */}
+        {onMapClickForCoords && (
+          <MapClickHandler onClick={onMapClickForCoords} />
+        )}
+
+        {straightPath && straightPath.length >= 2 && (
+          <Polyline
+            positions={straightPath}
+            pathOptions={{
+              color: '#64748B',
+              weight: 2.5,
+              dashArray: '6, 6',
+              opacity: 0.85
+            }}
+          >
+            <Popup>
+              <div className="p-1 font-sans text-xs">
+                <strong>Straight-Line Baseline Corridor</strong>
+                <div className="text-slate-500">Unconstrained path</div>
+              </div>
+            </Popup>
+          </Polyline>
+        )}
+
+        {optimizedPath && optimizedPath.length >= 2 && (
+          <Polyline
+            positions={optimizedPath}
+            pathOptions={{
+              color: '#0284C7',
+              weight: 4,
+              opacity: 0.95
+            }}
+          >
+            <Popup>
+              <div className="p-1 font-sans text-xs">
+                <strong className="text-[#0B3D66]">Least-Cost Optimized Alignment (A*)</strong>
+                <div className="text-emerald-700 font-semibold">Minimizes agricultural land &amp; dispute zones</div>
+              </div>
+            </Popup>
+          </Polyline>
+        )}
+
+        {alignmentOrigin && (
+          <Marker
+            position={alignmentOrigin}
+            icon={createEndpointIcon('A', '#16A34A')}
+          >
+            <Popup>
+              <div className="p-1 text-xs">
+                <strong>Corridor Origin (A)</strong>: [{alignmentOrigin[0].toFixed(4)}, {alignmentOrigin[1].toFixed(4)}]
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {alignmentDestination && (
+          <Marker
+            position={alignmentDestination}
+            icon={createEndpointIcon('B', '#DC2626')}
+          >
+            <Popup>
+              <div className="p-1 text-xs">
+                <strong>Corridor Destination (B)</strong>: [{alignmentDestination[0].toFixed(4)}, {alignmentDestination[1].toFixed(4)}]
+              </div>
+            </Popup>
+          </Marker>
+        )}
       </MapContainer>
 
-      {/* ── Interactive Legend & Summary Overlay ── */}
+      {/* ── Official Government Legend Overlay ── */}
       {showLegend && (
-        <div className="absolute bottom-4 left-4 z-[1000] p-3 rounded-xl bg-slate-950/90 backdrop-blur-md border border-slate-800 shadow-2xl text-xs max-w-xs">
-          <div className="font-bold text-slate-200 text-xs mb-2 flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              GIS Parcel Status Legend
-            </span>
+        <div className="absolute bottom-3 left-3 z-[1000] p-2.5 bg-white border border-slate-300 shadow-md text-xs max-w-xs rounded-xs">
+          <div className="font-bold text-[#0B3D66] mb-1.5 pb-1 border-b border-slate-200">
+            Cadastral Status Legend
           </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-sm bg-[#22c55e] border border-emerald-400"></span>
-              <span className="text-slate-300">Completed</span>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-700">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 bg-[#22c55e] border border-emerald-600 inline-block"></span>
+              <span>Completed</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-sm bg-[#eab308] border border-amber-400"></span>
-              <span className="text-slate-300">In Progress</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 bg-[#eab308] border border-amber-600 inline-block"></span>
+              <span>In Progress</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-sm bg-[#ef4444] border border-rose-400"></span>
-              <span className="text-slate-300">Dispute</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 bg-[#ef4444] border border-red-600 inline-block"></span>
+              <span>Dispute</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-sm bg-[#9ca3af] border border-slate-400"></span>
-              <span className="text-slate-300">Not Started</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 bg-[#94a3b8] border border-slate-500 inline-block"></span>
+              <span>Not Started</span>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between text-[10.5px]">
-            <div className="flex items-center gap-1 text-rose-400 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              <span>Pulsing Pin: Inspection Needed</span>
-            </div>
-            {officerLocation && (
-              <div className="flex items-center gap-1 text-sky-400 font-mono">
-                <span className="w-2 h-2 rounded-full bg-sky-400"></span>
-                <span>GPS Live</span>
+          <div className="mt-1.5 pt-1 border-t border-slate-200 text-[10px] text-red-700 font-bold flex items-center gap-1">
+            <span>⚠️ Badge: Action / Inspection Required</span>
+          </div>
+
+          {(straightPath || optimizedPath) && (
+            <div className="mt-1.5 pt-1 border-t border-slate-200 text-[10px] space-y-1">
+              <div className="flex items-center gap-1.5">
+                <span style={{ width: '16px', height: '0px', borderTop: '2px dashed #64748B', display: 'inline-block' }}></span>
+                <span className="text-slate-600 font-medium">Baseline (Straight)</span>
               </div>
-            )}
-          </div>
+              <div className="flex items-center gap-1.5">
+                <span style={{ width: '16px', height: '0px', borderTop: '3px solid #0284C7', display: 'inline-block' }}></span>
+                <span className="text-[#0B3D66] font-bold">Optimized Alignment (A*)</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -461,3 +533,4 @@ export const ParcelMap: React.FC<ParcelMapProps> = ({
 };
 
 export default ParcelMap;
+

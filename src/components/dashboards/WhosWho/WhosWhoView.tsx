@@ -1,5 +1,4 @@
 import React from 'react';
-import { User, Phone, Mail, MapPin } from 'lucide-react';
 
 export const WhosWhoView: React.FC = () => {
   const officers = [
@@ -54,43 +53,59 @@ export const WhosWhoView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="nic-card p-4">
-        <div className="border-b-2 border-[#F5821F] pb-2 mb-3">
-          <h2 className="text-base font-bold text-[#0B3D66] uppercase tracking-wide flex items-center gap-2">
-            <User className="w-5 h-5 text-[#F5821F]" />
-            Who's Who — Ministry Leadership & Competent Authorities
-          </h2>
-          <p className="text-xs text-slate-600 mt-0.5">
-            Directory of key statutory authorities, central leadership, and nodal land acquisition officers across India.
-          </p>
+    <div style={{ marginBottom: '14px' }}>
+      {/* Header Block */}
+      <div className="gov-register-header">
+        <div className="reg-meta">
+          MINISTRY DIRECTORY &bull; COMPETENT AUTHORITIES &bull; STATUTORY APPOINTMENTS
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {officers.map((off, idx) => (
-            <div key={idx} className="p-3.5 bg-slate-50 border border-slate-300 rounded flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-orange-600 uppercase font-mono block mb-1">
-                  {off.category}
-                </span>
-                <h3 className="font-bold text-sm text-[#0B3D66]">{off.name}</h3>
-                <p className="text-xs text-slate-700 font-medium mt-0.5 leading-tight">{off.designation}</p>
-                <p className="text-[11px] text-slate-500 mt-1">{off.office}</p>
-              </div>
-
-              <div className="mt-3 pt-2 border-t border-slate-200 text-[11px] text-slate-600 space-y-1 font-mono">
-                <div className="flex items-center gap-1.5">
-                  <Mail className="w-3 h-3 text-[#0B3D66]" />
-                  <span className="text-[#0B3D66] font-semibold">{off.email}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Phone className="w-3 h-3 text-[#0B3D66]" />
-                  <span>{off.phone}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="reg-title">Who&apos;s Who — Ministry Leadership &amp; Competent Authorities</div>
+        <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
+          Official directory of key statutory authorities, central leadership, and nodal land acquisition officers across India.
         </div>
+      </div>
+
+      {/* Register Table */}
+      <div style={{ overflowX: 'auto' }}>
+        <table className="gov-stage-register" style={{ tableLayout: 'fixed', width: '100%' }}>
+          <colgroup>
+            <col style={{ width: '54px' }} />
+            <col style={{ width: '220px' }} />
+            <col style={{ width: 'auto' }} />
+            <col style={{ width: '220px' }} />
+            <col style={{ width: '190px' }} />
+            <col style={{ width: '125px' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={{ width: '54px', textAlign: 'center' }}>S.No.</th>
+              <th style={{ width: '220px' }}>Name</th>
+              <th>Designation</th>
+              <th style={{ width: '220px' }}>Office</th>
+              <th style={{ width: '190px' }}>Email</th>
+              <th style={{ width: '125px' }}>Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            {officers.map((off, idx) => (
+              <tr key={idx}>
+                <td style={{ textAlign: 'center', fontWeight: 700, verticalAlign: 'middle' }}>{idx + 1}</td>
+                <td style={{ verticalAlign: 'middle' }}>
+                  <div style={{ fontWeight: 700, color: '#0B3D66', fontSize: '13px' }}>{off.name}</div>
+                  <span style={{ fontSize: '11px', color: '#EA580C', fontWeight: 600 }}>{off.category}</span>
+                </td>
+                <td style={{ fontSize: '12px', color: '#1E293B', verticalAlign: 'middle' }}>{off.designation}</td>
+                <td style={{ fontSize: '12px', color: '#475569', verticalAlign: 'middle' }}>{off.office}</td>
+                <td style={{ fontSize: '12px', color: '#0B3D66', fontWeight: 600, verticalAlign: 'middle' }}>
+                  <a href={`mailto:${off.email}`} style={{ color: '#0B3D66', textDecoration: 'none' }}>
+                    {off.email}
+                  </a>
+                </td>
+                <td style={{ fontSize: '12px', color: '#475569', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{off.phone}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
