@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useModals } from '../../../context/ModalContext';
 import { MOCK_FIELD_PARCELS } from '../../../data/mockData';
 import { FieldParcel, PhotoEvidence } from '../../../types';
@@ -6,6 +6,7 @@ import { useDebounce } from '../../../hooks/useDebounce';
 import { GPSCaptureSimulator } from './GPSCaptureSimulator';
 import { PhotoEvidenceUploader } from './PhotoEvidenceUploader';
 import { VerificationActions } from './VerificationActions';
+import { subscribeFieldParcels, updateFieldParcel } from '../../../services/firestoreService';
 import {
   Users,
   MapPin,
@@ -22,6 +23,17 @@ export const FieldOfficerDashboard: React.FC = () => {
   const { openModal } = useModals();
   const [parcels, setParcels] = useState<FieldParcel[]>(MOCK_FIELD_PARCELS);
   const [selectedParcel, setSelectedParcel] = useState<FieldParcel>(MOCK_FIELD_PARCELS[0]);
+
+  // Live Firestore subscription
+  useEffect(() => {
+    const unsubscribe = subscribeFieldParcels((list) => {
+      if (list && list.length > 0) {
+        setParcels(list);
+        setSelectedParcel((prev) => list.find((p) => p.id === prev?.id) || list[0]);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,17 +62,25 @@ export const FieldOfficerDashboard: React.FC = () => {
         verificationStatus: 'GPS_CAPTURED' as const,
       };
       setParcels((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+      updateFieldParcel(updated.id, {
+        gpsCoords: coords,
+        verificationStatus: 'GPS_CAPTURED',
+      }).catch((err) => console.warn('[FieldOfficer] Update coords failed:', err));
       return updated;
     });
   };
 
   const handleAddPhoto = (photo: PhotoEvidence) => {
     setSelectedParcel((prev) => {
+      const newPhotos = [photo, ...prev.photos];
       const updated = {
         ...prev,
-        photos: [photo, ...prev.photos],
+        photos: newPhotos,
       };
       setParcels((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+      updateFieldParcel(updated.id, {
+        photos: newPhotos,
+      }).catch((err) => console.warn('[FieldOfficer] Update photos failed:', err));
       return updated;
     });
   };
@@ -74,6 +94,10 @@ export const FieldOfficerDashboard: React.FC = () => {
     };
     setSelectedParcel(updated);
     setParcels((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    updateFieldParcel(updated.id, {
+      verificationStatus: 'VERIFIED',
+      dueHours: 0,
+    }).catch((err) => console.warn('[FieldOfficer] Complete verification failed:', err));
   };
 
   const handleFlagObjection = () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useModals } from '../../../context/ModalContext';
 import { ObjectionModal } from './ObjectionModal';
 import {
@@ -17,12 +17,20 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { MOCK_CITIZEN_CASE } from '../../../data/mockData';
+import { subscribeCitizenCase } from '../../../services/firestoreService';
+import type { CitizenCase } from '../../../types';
 
 export const CitizenDashboard: React.FC = () => {
   const { openModal } = useModals();
   const [isObjectionModalOpen, setIsObjectionModalOpen] = useState(false);
+  const [c, setC] = useState<CitizenCase>(MOCK_CITIZEN_CASE);
 
-  const c = MOCK_CITIZEN_CASE;
+  useEffect(() => {
+    const unsubscribe = subscribeCitizenCase('MH-PAL-2024-8821', (data) => {
+      setC(data);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const stages = [
     {

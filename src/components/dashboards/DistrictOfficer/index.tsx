@@ -1,18 +1,28 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DistrictKPIs } from './DistrictKPIs';
 import { DistrictComparisonChart } from './DistrictComparisonChart';
 import { BrutalistCaseTable } from './BrutalistCaseTable';
 import { CompensationDisbursementModal } from './CompensationDisbursementModal';
 import { DashboardSearchFilterBar, StatusOption } from '../../common/DashboardSearchFilterBar';
 import { MOCK_DISTRICT_CASES } from '../../../data/mockData';
+import { getDistrictCases } from '../../../services/firestoreService';
 import { useRole } from '../../../context/RoleContext';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { CitizenCase } from '../../../types';
 
 export const DistrictOfficerDashboard: React.FC = () => {
   const { setCurrentRole } = useRole();
+  const [districtCases, setDistrictCases] = useState<CitizenCase[]>(MOCK_DISTRICT_CASES);
   const [selectedCase, setSelectedCase] = useState<CitizenCase | null>(null);
   const [isDisbursementModalOpen, setIsDisbursementModalOpen] = useState(false);
+
+  useEffect(() => {
+    getDistrictCases().then((cases) => {
+      if (cases && cases.length > 0) {
+        setDistrictCases(cases as CitizenCase[]);
+      }
+    });
+  }, []);
 
   // Local Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,19 +41,19 @@ export const DistrictOfficerDashboard: React.FC = () => {
 
   const filteredCases = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase();
-    return MOCK_DISTRICT_CASES.filter((c) => {
+    return districtCases.filter((c) => {
       const matchesSearch =
         !q ||
-        c.surveyNo.toLowerCase().includes(q) ||
-        c.owner.toLowerCase().includes(q) ||
-        c.village.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q) ||
+        (c.surveyNo && c.surveyNo.toLowerCase().includes(q)) ||
+        (c.owner && c.owner.toLowerCase().includes(q)) ||
+        (c.village && c.village.toLowerCase().includes(q)) ||
+        (c.id && c.id.toLowerCase().includes(q)) ||
         (c.category && c.category.toLowerCase().includes(q));
 
       const matchesStatus = statusFilter === 'ALL' || c.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [debouncedSearch, statusFilter]);
+  }, [districtCases, debouncedSearch, statusFilter]);
 
   const handleOpenDisbursement = (caseItem: CitizenCase) => {
     setSelectedCase(caseItem);

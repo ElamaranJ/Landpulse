@@ -4,7 +4,7 @@ import { useModals } from '../../../context/ModalContext';
 import { useLocale } from '../../../context/LocaleContext';
 import { RoleType, AuthUser } from '../../../types';
 import confetti from 'canvas-confetti';
-import { signInWithGoogle } from '../../../services/firebase';
+import { signInWithGoogle, loginWithEmail } from '../../../services/firebase';
 import {
   CheckCircle2,
   ChevronDown,
@@ -127,6 +127,14 @@ export const GovLoginView: React.FC = () => {
     const passwordToSend = passwordInput === '••••••••••••' ? 'Password@123' : passwordInput;
 
     try {
+      // 1. Try Firebase Authentication
+      try {
+        await loginWithEmail(emailInput.trim(), passwordToSend);
+      } catch (fbErr) {
+        console.warn('[GovLoginView] Firebase direct login fallback to server auth:', fbErr);
+      }
+
+      // 2. Validate with backend session
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,7 +154,7 @@ export const GovLoginView: React.FC = () => {
       triggerLoginSuccess(
         data.user,
         data.user.role as RoleType,
-        data.message || `Welcome, ${data.user.name}! Authenticated via Jan Parichay SSO.`,
+        data.message || `Welcome, ${data.user.name}! Authenticated successfully.`,
         data.token
       );
     } catch (err) {

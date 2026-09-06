@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   Landmark,
 } from 'lucide-react';
-import { signInWithGoogle } from '../../../services/firebase';
+import { signInWithGoogle, loginWithEmail } from '../../../services/firebase';
 
 interface OfficialLoginTabProps {
   isLoading: boolean;
@@ -73,13 +73,23 @@ export const OfficialLoginTab: React.FC<OfficialLoginTabProps> = ({
     setCaptchaError('');
 
     setIsSubmitting(true);
+    const passToSend = officialPassword === '••••••••••••' ? 'Password@123' : officialPassword;
+
     try {
+      // 1. Try Firebase Authentication
+      try {
+        await loginWithEmail(officialUsername.trim(), passToSend);
+      } catch (fbErr) {
+        console.warn('[OfficialLogin] Firebase direct login fallback to server auth:', fbErr);
+      }
+
+      // 2. Validate with backend session
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: officialUsername.trim(),
-          password: officialPassword,
+          password: passToSend,
         }),
       });
 
@@ -97,7 +107,7 @@ export const OfficialLoginTab: React.FC<OfficialLoginTabProps> = ({
       onSuccess(
         data.user,
         data.user.role as RoleType,
-        data.message || `Welcome, ${data.user.name}! Authenticated via Jan Parichay SSO.`
+        data.message || `Welcome, ${data.user.name}! Authenticated via Official Portal.`
       );
     } catch (err) {
       setServerError('Unable to reach authentication server. Please check network connection.');

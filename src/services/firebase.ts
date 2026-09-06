@@ -3,10 +3,15 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithEmailAndPassword,
   signOut as firebaseSignOut,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
   Auth,
   UserCredential,
 } from 'firebase/auth';
+import { getFirestore, Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
 // Read Firebase config from Vite environment variables with project defaults
 const firebaseConfig = {
@@ -18,35 +23,84 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:766785165216:web:515d32d2c19f7e12e636c5',
 };
 
-// Check if valid Firebase configuration is provided
 export const isFirebaseConfigured = Boolean(
   firebaseConfig.apiKey &&
     firebaseConfig.apiKey.trim() !== '' &&
     firebaseConfig.apiKey !== 'your_firebase_api_key_here' &&
     firebaseConfig.projectId &&
-    firebaseConfig.projectId.trim() !== '' &&
-    firebaseConfig.projectId !== 'your-project-id'
+    firebaseConfig.projectId.trim() !== ''
 );
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
+let db: Firestore | undefined;
 let googleProvider: GoogleAuthProvider | undefined;
 
 if (isFirebaseConfigured) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
+    db = getFirestore(app);
     googleProvider = new GoogleAuthProvider();
-    googleProvider.setCustomParameters({
-      prompt: 'select_account',
-    });
+    googleProvider.setCustomParameters({ prompt: 'select_account' });
   } catch (err) {
     console.warn('[Firebase] Initialization error:', err);
   }
 }
 
-export { auth, googleProvider };
+export { auth, db, googleProvider };
 
+// ── Email/Password Sign-In (Officer Roles) ─────────────────────────
+export async function loginWithEmail(email: string, pass: string) {
+  if (!auth) throw new Error('Firebase Auth is not initialized.');
+  const userCredential = await signInWithEmailAndPassword(auth, email.trim(), pass);
+  const idToken = await userCredential.user.getIdToken();
+  return { user: userCredential.user, idToken };
+}
+
+// ── Phone OTP Authentication (Citizen Beneficiary) ────────────────
+export function initRecaptcha(containerId: string): RecaptchaVerifier {
+  if (!auth) throw new Error('Firebase Auth is not initialized.');
+  
+  // Clean up any previous recaptcha instances attached to window
+  if ((window as unknown as { recaptchaVerifier?: RecaptchaVerifier }).recaptchaVerifier) {
+    try {
+      (window as unknown as { recaptchaVerifier?: RecaptchaVerifier }).recaptchaVerifier?.clear();
+    } catch {
+      // ignore
+    }
+  }
+
+  const verifier = new RecaptchaVerifier(auth, containerId, {
+    size: 'invisible',
+    callback: () => {
+      // reCAPTCHA solved
+    },
+    'expired-callback': () => {
+      console.warn('[Firebase] Recaptcha expired');
+    },
+  });
+
+  (window as unknown as { recaptchaVerifier: RecaptchaVerifier }).recaptchaVerifier = verifier;
+  return verifier;
+}
+
+export async function sendFirebasePhoneOtp(
+  phoneNumber: string,
+  verifier: RecaptchaVerifier
+): Promise<ConfirmationResult> {
+  if (!auth) throw new Error('Firebase Auth is not initialized.');
+  
+  // Format to standard E.164 (e.g. +919820144521)
+  let cleanPhone = phoneNumber.replace(/[\s-]/g, '');
+  if (!cleanPhone.startsWith('+')) {
+    cleanPhone = '+91' + cleanPhone.replace(/^0+/, '');
+  }
+
+  return await signInWithPhoneNumber(auth, cleanPhone, verifier);
+}
+
+// ── Google Sign-In ────────────────────────────────────────────────
 export interface GoogleAuthResult {
   success: boolean;
   user?: {
@@ -57,21 +111,40 @@ export interface GoogleAuthResult {
   };
   idToken?: string;
   error?: string;
-  isMock?: boolean;
 }
 
-/**
- * Sign in with Google Popup.
- * If Firebase is configured with real credentials, triggers Google OAuth popup.
- * If credentials are not yet configured in .env, returns a simulated demo officer/citizen account
- * and flags isMock: true so the user can test the app immediately.
- */
 export async function signInWithGoogle(preferredRole?: string): Promise<GoogleAuthResult> {
   if (isFirebaseConfigured && auth && googleProvider) {
     try {
       const result: UserCredential = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const idToken = await user.getIdToken();
+
+      // Ensure a profile document exists in Firestore 'users' collection
+      if (db) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const existingDoc = await getDoc(userDocRef);
+        if (!existingDoc.exists()) {
+          const userEmail = (user.email || '').toLowerCase();
+          let assignedRole = preferredRole || 'citizen';
+          if (userEmail.endsWith('@nic.in') || userEmail.endsWith('@gov.in')) {
+            assignedRole = 'command_center';
+          }
+          await setDoc(userDocRef, {
+            id: `USR-GGL-${user.uid.slice(-6).toUpperCase()}`,
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName || userEmail.split('@')[0],
+            role: assignedRole,
+            roleTitle: assignedRole === 'command_center' ? 'Command Center Director' : 'Citizen Landowner (Beneficiary)',
+            department: assignedRole === 'command_center' ? 'Ministry of Rural Development' : 'Registered Landowner',
+            designation: assignedRole === 'command_center' ? 'Government Officer' : 'Citizen Beneficiary',
+            badgeLevel: 'Google e-KYC Verified',
+            tokenType: 'FIREBASE_GOOGLE_AUTH',
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
 
       return {
         success: true,
@@ -82,7 +155,6 @@ export async function signInWithGoogle(preferredRole?: string): Promise<GoogleAu
           photoURL: user.photoURL,
         },
         idToken,
-        isMock: false,
       };
     } catch (err: unknown) {
       const firebaseError = err as { code?: string; message?: string };
@@ -94,22 +166,7 @@ export async function signInWithGoogle(preferredRole?: string): Promise<GoogleAu
       if (firebaseError.code === 'auth/operation-not-allowed') {
         return {
           success: false,
-          error:
-            'Google Sign-In is not enabled in your Firebase Console. Go to Firebase Console -> Build -> Authentication -> Sign-in method -> Google -> Toggle "Enable" and Save.',
-        };
-      }
-      if (firebaseError.code === 'auth/unauthorized-domain') {
-        return {
-          success: false,
-          error:
-            'This domain is not authorized in Firebase Console. Add "localhost" under Authentication -> Settings -> Authorized domains.',
-        };
-      }
-      if (firebaseError.code === 'auth/configuration-not-found') {
-        return {
-          success: false,
-          error:
-            'Firebase Authentication not set up yet. Go to Firebase Console -> Authentication and click "Get Started".',
+          error: 'Google Sign-In is not enabled in Firebase Console.',
         };
       }
       return {
@@ -119,17 +176,9 @@ export async function signInWithGoogle(preferredRole?: string): Promise<GoogleAu
     }
   }
 
-  // Fallback / Demo mode when .env keys haven't been pasted yet
   return {
-    success: true,
-    user: {
-      uid: 'google-demo-' + Date.now(),
-      email: preferredRole === 'citizen' ? 'ramesh.patil@citizen.in' : 'arun.mehta@nic.in',
-      displayName: preferredRole === 'citizen' ? 'Ramesh Patil (Google Verified)' : 'Shri Arun K. Mehta (Google Verified)',
-      photoURL: 'https://lh3.googleusercontent.com/a/default-user',
-    },
-    idToken: 'demo-google-token',
-    isMock: true,
+    success: false,
+    error: 'Firebase Auth is not configured.',
   };
 }
 

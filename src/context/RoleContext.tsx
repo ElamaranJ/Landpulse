@@ -4,6 +4,10 @@ import { RoleType, Project, AuthUser, CriticalAlert } from '../types';
 import { Parcel } from '../types/parcel';
 import { MOCK_PROJECTS, MOCK_CRITICAL_ALERTS } from '../data/mockData';
 import { addParcels } from '../services/api';
+import { auth, db, signOutFirebase } from '../services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { subscribeProjects } from '../services/firestoreService';
 
 export const DEFAULT_PERSONAS: Record<string, AuthUser> = {
   command_center: {
@@ -360,6 +364,65 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [selectedLanguage]);
 
+  // Listen to live Firestore projects
+  useEffect(() => {
+    const unsub = subscribeProjects((liveProjects) => {
+      if (liveProjects && liveProjects.length > 0) {
+        setProjects(liveProjects);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Listen to Firebase Auth state changes
+  useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        if (db) {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
+            if (userDoc.exists()) {
+              const profile = userDoc.data() as AuthUser;
+              setCurrentUser(profile);
+              setCurrentRoleState(profile.role);
+              return;
+            }
+          } catch (e) {
+            console.warn('[RoleContext] Firestore user fetch error:', e);
+          }
+        }
+        // Fallback by email
+        const userEmail = (fbUser.email || '').toLowerCase();
+        const matched = Object.values(DEFAULT_PERSONAS).find(
+          (p) => p.email?.toLowerCase() === userEmail
+        );
+        if (matched) {
+          setCurrentUser(matched);
+          setCurrentRoleState(matched.role);
+        } else {
+          const citizenUser: AuthUser = {
+            id: fbUser.uid,
+            name: fbUser.displayName || 'Registered Citizen Beneficiary',
+            role: 'citizen',
+            roleTitle: 'Citizen Landowner (Beneficiary)',
+            phone: fbUser.phoneNumber || undefined,
+            email: fbUser.email || undefined,
+            department: 'Revenue & Land Records',
+            designation: 'Landowner Beneficiary',
+            badgeLevel: 'Aadhaar / Phone e-KYC Verified',
+            tokenType: 'AADHAAR_OTP',
+            loginTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+          setCurrentUser(citizenUser);
+          setCurrentRoleState('citizen');
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Verify stored JWT session against /api/auth/me on mount
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -370,7 +433,6 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .then((res) => res.json())
         .then((data) => {
           if (!data.success) {
-            // Token invalidated on backend
             logoutUser();
           }
         })
@@ -410,6 +472,7 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logoutUser = () => {
+    signOutFirebase();
     setCurrentUser(null);
     try {
       localStorage.removeItem(USER_STORAGE_KEY);

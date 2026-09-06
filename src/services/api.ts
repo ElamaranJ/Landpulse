@@ -3,12 +3,14 @@ import { MOCK_PARCELS } from '../data/parcelsData';
 
 // Local cache for in-browser state persistence across views
 let localParcelsCache: Parcel[] = (() => {
-  const saved = localStorage.getItem('landpulse_parcels_data');
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch {
-      // ignore
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem('landpulse_parcels_data');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // ignore
+      }
     }
   }
   return JSON.parse(JSON.stringify(MOCK_PARCELS));
@@ -17,7 +19,9 @@ let localParcelsCache: Parcel[] = (() => {
 const persistLocalCache = (parcels: Parcel[]) => {
   localParcelsCache = parcels;
   try {
-    localStorage.setItem('landpulse_parcels_data', JSON.stringify(parcels));
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem('landpulse_parcels_data', JSON.stringify(parcels));
+    }
   } catch {
     // ignore
   }

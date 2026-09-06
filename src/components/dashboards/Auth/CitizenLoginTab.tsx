@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   FileCheck2,
 } from 'lucide-react';
+import { initRecaptcha, sendFirebasePhoneOtp } from '../../../services/firebase';
+import type { ConfirmationResult } from 'firebase/auth';
 
 interface CitizenLoginTabProps {
   isLoading: boolean;
@@ -32,6 +34,7 @@ export const CitizenLoginTab: React.FC<CitizenLoginTabProps> = ({
   const [serverMessage, setServerMessage] = useState('');
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   // OTP Timer Countdown
   useEffect(() => {
@@ -52,7 +55,7 @@ export const CitizenLoginTab: React.FC<CitizenLoginTabProps> = ({
     return caseIdInput;
   };
 
-  // Real Server-Side OTP Dispatch
+  // Real Firebase / Server OTP Dispatch
   const handleSendOtp = async () => {
     if (citizenMethod === 'aadhaar' && !consentChecked) {
       alert('Please agree to Aadhaar e-KYC consent declaration.');
@@ -62,6 +65,23 @@ export const CitizenLoginTab: React.FC<CitizenLoginTabProps> = ({
     setServerMessage('');
     setIsSendingOtp(true);
 
+    const phoneToUse = citizenMethod === 'mobile' ? mobileNumber : '+919820144521';
+
+    // 1. Try real Firebase Phone Auth (supports test phone number +91 9820144521 / code 123456)
+    try {
+      const verifier = initRecaptcha('citizen-recaptcha-container');
+      const confirmation = await sendFirebasePhoneOtp(phoneToUse, verifier);
+      setConfirmationResult(confirmation);
+      setOtpSent(true);
+      setOtpTimer(60);
+      setServerMessage('Firebase Phone OTP dispatched. Enter code (or test code 123456).');
+      setIsSendingOtp(false);
+      return;
+    } catch (fbErr) {
+      console.warn('[CitizenLogin] Firebase Phone Auth fallback to server dispatch:', fbErr);
+    }
+
+    // 2. Fallback to local server OTP
     try {
       const res = await fetch('/api/auth/otp/send', {
         method: 'POST',
@@ -85,7 +105,7 @@ export const CitizenLoginTab: React.FC<CitizenLoginTabProps> = ({
     }
   };
 
-  // Real Server-Side OTP Verification
+  // Real Firebase / Server OTP Verification
   const handleCitizenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setServerError('');
@@ -97,6 +117,24 @@ export const CitizenLoginTab: React.FC<CitizenLoginTabProps> = ({
     }
 
     setIsVerifying(true);
+
+    // 1. If Firebase confirmationResult exists, verify via Firebase Phone Auth
+    if (confirmationResult) {
+      try {
+        await confirmationResult.confirm(enteredOtp);
+        onSuccess(
+          DEFAULT_PERSONAS.citizen,
+          'citizen',
+          'Aadhaar / Mobile OTP verified successfully via Firebase Phone Auth!'
+        );
+        setIsVerifying(false);
+        return;
+      } catch (fbErr) {
+        console.warn('[CitizenLogin] Firebase Phone Auth verification failed, checking server OTP:', fbErr);
+      }
+    }
+
+    // 2. Fallback to server-side OTP verification
     try {
       const res = await fetch('/api/auth/otp/verify', {
         method: 'POST',
@@ -296,7 +334,7 @@ export const CitizenLoginTab: React.FC<CitizenLoginTabProps> = ({
           </div>
           <button
             type="button"
-            onClick={() => onPersonaLogin('citizen')}
+            onClick={handleSendOtp}
             className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded-[2px] font-bold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <Smartphone className="w-4 h-4 text-amber-300" />
@@ -304,6 +342,9 @@ export const CitizenLoginTab: React.FC<CitizenLoginTabProps> = ({
           </button>
         </div>
       )}
+
+      {/* Invisible reCAPTCHA container for Firebase Phone Auth */}
+      <div id="citizen-recaptcha-container"></div>
 
       {citizenMethod === 'caseId' && (
         <div className="space-y-4">
