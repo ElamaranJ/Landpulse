@@ -1,30 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import { MOCK_PROJECTS, MOCK_STATES, MOCK_DISTRICT_CASES } from '../../data/mockData';
 import { Search, Compass, MapPin, FileText, ArrowRight, X, Shield, Users, Layers, AlertCircle } from 'lucide-react';
 import { RoleType } from '../../types';
 
 export const CommandPalette: React.FC = () => {
-  const { commandPaletteOpen, setCommandPaletteOpen, setCurrentRole, setSelectedProject } = useRole();
+  const { setCurrentRole, setSelectedProject } = useRole();
+  const { isModalOpen, closeModal, toggleModal } = useModals();
   const [query, setQuery] = useState('');
+
+  const isOpen = isModalOpen('commandPalette');
 
   // Keyboard shortcut listener (Cmd/Ctrl + K or Escape)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setCommandPaletteOpen(!commandPaletteOpen);
+        toggleModal('commandPalette');
       }
-      if (e.key === 'Escape' && commandPaletteOpen) {
-        setCommandPaletteOpen(false);
+      if (e.key === 'Escape' && isOpen) {
+        closeModal('commandPalette');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [commandPaletteOpen, setCommandPaletteOpen]);
+  }, [isOpen, closeModal, toggleModal]);
 
-  if (!commandPaletteOpen) return null;
+  if (!isOpen) return null;
 
   const filteredProjects = MOCK_PROJECTS.filter(
     (p) =>
@@ -42,13 +46,13 @@ export const CommandPalette: React.FC = () => {
 
   const handleSelectRole = (role: RoleType) => {
     setCurrentRole(role);
-    setCommandPaletteOpen(false);
+    closeModal('commandPalette');
   };
 
   const handleSelectProject = (proj: (typeof MOCK_PROJECTS)[0]) => {
     setSelectedProject(proj);
     setCurrentRole('command_center');
-    setCommandPaletteOpen(false);
+    closeModal('commandPalette');
   };
 
   return (
@@ -151,7 +155,7 @@ export const CommandPalette: React.FC = () => {
                       key={c.id}
                       onClick={() => {
                         setCurrentRole('citizen');
-                        setCommandPaletteOpen(false);
+                        closeModal('commandPalette');
                       }}
                       className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 cursor-pointer transition-colors"
                     >

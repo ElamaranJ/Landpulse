@@ -3,17 +3,45 @@ import { IndiaMap } from '../../common/IndiaMap';
 import { MOCK_PROJECTS, MOCK_STATES } from '../../../data/mockData';
 import { useRole } from '../../../context/RoleContext';
 import type { Project } from '../../../types';
-import { Layers, ChevronRight, ExternalLink, ArrowUpRight } from 'lucide-react';
+import { Layers, ChevronRight, ExternalLink, ArrowUpRight, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export const GeographicIntelligence: React.FC = () => {
+interface GeographicIntelligenceProps {
+  searchTerm?: string;
+  statusFilter?: string;
+}
+
+export const GeographicIntelligence: React.FC<GeographicIntelligenceProps> = ({
+  searchTerm = '',
+  statusFilter = 'ALL',
+}) => {
   const { selectedState, setSelectedProject, setCurrentRole } = useRole();
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const navigate = useNavigate();
 
   const categories = ['ALL', 'Highways', 'Railways', 'Energy', 'Water', 'Industrial', 'Aviation'];
 
   const filteredProjects = MOCK_PROJECTS.filter((p) => {
     const matchesCat = selectedCategory === 'ALL' || p.category === selectedCategory;
-    return matchesCat;
+    const q = searchTerm.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      p.code.toLowerCase().includes(q) ||
+      p.name.toLowerCase().includes(q) ||
+      p.state.toLowerCase().includes(q) ||
+      p.corridor.toLowerCase().includes(q) ||
+      p.ministry.toLowerCase().includes(q) ||
+      p.districts.some((d) => d.toLowerCase().includes(q));
+
+    const matchesStatus =
+      statusFilter === 'ALL' ||
+      p.status === statusFilter ||
+      (statusFilter === 'CRITICAL' && p.status === 'critical') ||
+      (statusFilter === 'ON_TRACK' && p.status === 'on_track') ||
+      (statusFilter === 'IN_PROGRESS' && p.status === 'in_progress') ||
+      (statusFilter === 'DELAYED' && p.status === 'delayed');
+
+    return matchesCat && matchesSearch && matchesStatus;
   });
 
   const activeStateObj = MOCK_STATES.find((s) => s.id === selectedState) || MOCK_STATES[0];
@@ -21,6 +49,12 @@ export const GeographicIntelligence: React.FC = () => {
   const handleDrilldownProject = (proj: Project) => {
     setSelectedProject(proj);
     setCurrentRole('district_officer');
+    navigate('/district-officer');
+  };
+
+  const handleNavigateDistrict = () => {
+    setCurrentRole('district_officer');
+    navigate('/district-officer');
   };
 
   return (
@@ -90,7 +124,7 @@ export const GeographicIntelligence: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setCurrentRole('district_officer')}
+              onClick={handleNavigateDistrict}
               className="text-xs bg-[#1D4ED8] hover:bg-[#1E40AF] text-white px-3.5 py-2 rounded-lg font-bold flex items-center gap-1.5 shrink-0 transition-colors shadow-2xs"
             >
               <span>District Ledger</span>
@@ -127,46 +161,53 @@ export const GeographicIntelligence: React.FC = () => {
 
             {/* Project List */}
             <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-              {filteredProjects.map((proj) => (
-                <div
-                  key={proj.id}
-                  onClick={() => handleDrilldownProject(proj)}
-                  className="p-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#1D4ED8] transition-all cursor-pointer flex items-center justify-between gap-3 font-mono text-xs shadow-2xs"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
-                        {proj.code}
-                      </span>
-                      <h5 className="font-bold text-sm text-[#0B3D66] truncate font-sans">
-                        {proj.name}
-                      </h5>
+              {filteredProjects.length > 0 ? (
+                filteredProjects.map((proj) => (
+                  <div
+                    key={proj.id}
+                    onClick={() => handleDrilldownProject(proj)}
+                    className="p-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#1D4ED8] transition-all cursor-pointer flex items-center justify-between gap-3 font-mono text-xs shadow-2xs"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
+                          {proj.code}
+                        </span>
+                        <h5 className="font-bold text-sm text-[#0B3D66] truncate font-sans">
+                          {proj.name}
+                        </h5>
+                      </div>
+                      <p className="text-xs text-slate-600 font-sans truncate font-medium">
+                        {proj.state} • {proj.acquiredAcres.toLocaleString()} / {proj.totalAcres.toLocaleString()} Acres ({((proj.acquiredAcres / proj.totalAcres) * 100).toFixed(0)}%)
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-600 font-sans truncate font-medium">
-                      {proj.state} • {proj.acquiredAcres.toLocaleString()} / {proj.totalAcres.toLocaleString()} Acres ({((proj.acquiredAcres / proj.totalAcres) * 100).toFixed(0)}%)
-                    </p>
-                  </div>
 
-                  <div className="text-right shrink-0">
-                    <span
-                      className={`gov-badge ${
-                        proj.status === 'critical'
-                          ? 'gov-badge-critical'
-                          : proj.status === 'on_track'
-                          ? 'gov-badge-success'
-                          : proj.status === 'delayed'
-                          ? 'gov-badge-warning'
-                          : 'gov-badge-info'
-                      }`}
-                    >
-                      {proj.status.replace('_', ' ')}
-                    </span>
-                    <span className="text-xs text-slate-800 font-bold block mt-1">
-                      ₹{(proj.disbursedCr / 1000).toFixed(1)}k Cr
-                    </span>
+                    <div className="text-right shrink-0">
+                      <span
+                        className={`gov-badge ${
+                          proj.status === 'critical'
+                            ? 'gov-badge-critical'
+                            : proj.status === 'on_track'
+                            ? 'gov-badge-success'
+                            : proj.status === 'delayed'
+                            ? 'gov-badge-warning'
+                            : 'gov-badge-info'
+                        }`}
+                      >
+                        {proj.status.replace('_', ' ')}
+                      </span>
+                      <span className="text-xs text-slate-800 font-bold block mt-1">
+                        ₹{(proj.disbursedCr / 1000).toFixed(1)}k Cr
+                      </span>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                  <AlertCircle className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
+                  <p className="font-bold text-xs text-slate-700">No corridors match search criteria</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

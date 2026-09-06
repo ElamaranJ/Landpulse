@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   Database,
   X,
@@ -13,11 +13,11 @@ import {
 } from 'lucide-react';
 
 export const OpenDataModal: React.FC = () => {
-  const { openDataOpen, setOpenDataOpen } = useRole();
+  const { isModalOpen, closeModal } = useModals();
 
   const [selectedDataset, setSelectedDataset] = useState('corridors');
 
-  if (!openDataOpen) return null;
+  if (!isModalOpen('openData')) return null;
 
   const datasets = [
     {
@@ -67,7 +67,7 @@ export const OpenDataModal: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setOpenDataOpen(false)}
+            onClick={() => closeModal('openData')}
             className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -143,7 +143,7 @@ export const OpenDataModal: React.FC = () => {
         <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
           <span>License: Government Open Data License - India (GODL)</span>
           <button
-            onClick={() => setOpenDataOpen(false)}
+            onClick={() => closeModal('openData')}
             className="px-4 py-1.5 bg-[#0B3D66] text-white font-bold rounded"
           >
             Close

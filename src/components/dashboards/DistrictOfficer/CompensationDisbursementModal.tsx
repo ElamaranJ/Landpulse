@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { BrutalistBadge } from '../../common/BrutalistBadge';
 import { Landmark, ShieldCheck, X, CheckCircle2, RefreshCw } from 'lucide-react';
+import { CitizenCase } from '../../../types';
 
 interface CompensationDisbursementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  caseItem: any;
+  caseItem: CitizenCase | null;
 }
 
 export const CompensationDisbursementModal: React.FC<CompensationDisbursementModalProps> = ({

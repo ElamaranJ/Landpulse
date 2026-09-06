@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   AlertCircle,
   X,
@@ -13,8 +13,18 @@ import {
   FileText,
 } from 'lucide-react';
 
+interface TrackingResult {
+  ticket: string;
+  filedDate: string;
+  status: string;
+  hearingDate: string;
+  bench: string;
+  assignedOfficer: string;
+  remarks: string;
+}
+
 export const GrievanceModal: React.FC = () => {
-  const { grievanceModalOpen, setGrievanceModalOpen } = useRole();
+  const { isModalOpen, closeModal } = useModals();
 
   const [activeTab, setActiveTab] = useState<'lodge' | 'track'>('lodge');
   const [caseId, setCaseId] = useState('MH-PAL-2024-8821');
@@ -29,7 +39,7 @@ export const GrievanceModal: React.FC = () => {
 
   // Tracking tab state
   const [trackTicketNumber, setTrackTicketNumber] = useState('CPGRAMS-DoLR-2026-88219');
-  const [trackingResult, setTrackingResult] = useState<any>({
+  const [trackingResult, setTrackingResult] = useState<TrackingResult>({
     ticket: 'CPGRAMS-DoLR-2026-88219',
     filedDate: '12 Aug 2026',
     status: 'HEARING_SCHEDULED',
@@ -39,7 +49,7 @@ export const GrievanceModal: React.FC = () => {
     remarks: 'Field Re-inspection order issued to Revenue Inspector S. Murugan with NavIC DGPS RTK kit.',
   });
 
-  if (!grievanceModalOpen) return null;
+  if (!isModalOpen('grievance')) return null;
 
   const handleSubmitGrievance = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,23 +59,23 @@ export const GrievanceModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header */}
         <div className="bg-[#0B3D66] text-white px-6 py-4 flex items-center justify-between border-b-2 border-amber-400">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg">
-              <AlertCircle className="w-6 h-6 text-amber-300" />
+              <FileCheck2 className="w-6 h-6 text-amber-300" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">CPGRAMS &amp; Section 15 Statutory Objection Portal</h2>
+              <h2 className="text-lg font-bold">Lodge Objection &amp; CPGRAMS Grievance</h2>
               <p className="text-xs text-blue-200">
-                Department of Administrative Reforms &amp; Public Grievances (DARPG) • DoLR
+                Statutory Section 15 Inquiries &amp; Direct CALA Redressal Gateway
               </p>
             </div>
           </div>
           <button
-            onClick={() => setGrievanceModalOpen(false)}
+            onClick={() => closeModal('grievance')}
             className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -312,7 +322,7 @@ export const GrievanceModal: React.FC = () => {
             <Phone className="w-3.5 h-3.5 text-[#0B3D66]" /> Grievance Helpline: <strong>1800-11-2026</strong>
           </div>
           <button
-            onClick={() => setGrievanceModalOpen(false)}
+            onClick={() => closeModal('grievance')}
             className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded"
           >
             Close

@@ -13,6 +13,7 @@ import { DigitalAwardSheetModal } from '../common/DigitalAwardSheetModal';
 import { BulkLandIngestionModal } from '../common/BulkLandIngestionModal';
 import { OpenDataModal } from '../common/OpenDataModal';
 import { SiteMapPolicyModals } from '../common/SiteMapPolicyModals';
+import { GovInformationModals } from '../common/GovInformationModals';
 
 interface GovShellProps {
   children: React.ReactNode;
@@ -52,6 +53,8 @@ export const GovShell: React.FC<GovShellProps> = ({ children }) => {
       <BulkLandIngestionModal />
       <OpenDataModal />
       <SiteMapPolicyModals />
+      <GovInformationModals />
     </div>
   );
 };
+

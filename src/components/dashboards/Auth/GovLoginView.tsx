@@ -1,31 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRole, DEFAULT_PERSONAS } from '../../../context/RoleContext';
 import { RoleType, AuthUser } from '../../../types';
 import confetti from 'canvas-confetti';
 import {
   ShieldCheck,
-  Lock,
-  RefreshCw,
-  Volume2,
-  KeyRound,
-  FileCheck2,
-  Smartphone,
-  CreditCard,
   Building2,
   Fingerprint,
+  CreditCard,
   CheckCircle2,
-  AlertTriangle,
   ArrowRight,
   HelpCircle,
   Download,
   PhoneCall,
-  Eye,
-  EyeOff,
-  Cpu,
-  Landmark,
   Shield,
   FileText,
 } from 'lucide-react';
+import { OfficialLoginTab } from './OfficialLoginTab';
+import { CitizenLoginTab } from './CitizenLoginTab';
+import { DSCLoginTab } from './DSCLoginTab';
 
 export const GovLoginView: React.FC = () => {
   const { loginUser } = useRole();
@@ -33,69 +25,9 @@ export const GovLoginView: React.FC = () => {
   // Active Login Tab
   const [activeTab, setActiveTab] = useState<'official' | 'citizen' | 'dsc'>('official');
 
-  // Official Login Form State
-  const [officialUsername, setOfficialUsername] = useState('arun.mehta@nic.in');
-  const [officialPassword, setOfficialPassword] = useState('••••••••••••');
-  const [showPassword, setShowPassword] = useState(false);
-  const [captchaInput, setCaptchaInput] = useState('');
-  const [captchaCode, setCaptchaCode] = useState('8N3PK');
-  const [captchaError, setCaptchaError] = useState('');
-  const [isSpeakingCaptcha, setIsSpeakingCaptcha] = useState(false);
-
-  // Citizen Login Form State
-  const [citizenMethod, setCitizenMethod] = useState<'aadhaar' | 'mobile' | 'caseId'>('aadhaar');
-  const [aadhaarNumber, setAadhaarNumber] = useState('4829 1048 8921');
-  const [mobileNumber, setMobileNumber] = useState('98201 44521');
-  const [caseIdInput, setCaseIdInput] = useState('MH-PAL-2024-8821');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpDigits, setOtpDigits] = useState(['1', '2', '3', '4', '5', '6']);
-  const [otpTimer, setOtpTimer] = useState(45);
-  const [consentChecked, setConsentChecked] = useState(true);
-
-  // DSC Form State
-  const [selectedToken, setSelectedToken] = useState('emudhra-1');
-  const [dscPin, setDscPin] = useState('••••••');
-
   // General Loading & Feedback State
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Generate random captcha code
-  const refreshCaptcha = () => {
-    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-    let code = '';
-    for (let i = 0; i < 5; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setCaptchaCode(code);
-    setCaptchaInput('');
-    setCaptchaError('');
-  };
-
-  // Audio Captcha Text-To-Speech
-  const speakCaptcha = () => {
-    if ('speechSynthesis' in window) {
-      setIsSpeakingCaptcha(true);
-      const text = captchaCode.split('').join(' ');
-      const utterance = new SpeechSynthesisUtterance(`Security code is ${text}`);
-      utterance.rate = 0.8;
-      utterance.onend = () => setIsSpeakingCaptcha(false);
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert(`Security Code: ${captchaCode}`);
-    }
-  };
-
-  // OTP Timer Countdown
-  useEffect(() => {
-    let interval: any = null;
-    if (otpSent && otpTimer > 0) {
-      interval = setInterval(() => {
-        setOtpTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [otpSent, otpTimer]);
 
   const triggerLoginSuccess = (user: AuthUser, destinationRole: RoleType, message: string) => {
     setIsLoading(true);
@@ -117,79 +49,7 @@ export const GovLoginView: React.FC = () => {
     }, 1000);
   };
 
-  // Handle Official Form Submit
-  const handleOfficialSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (captchaInput.trim().toUpperCase() !== captchaCode) {
-      setCaptchaError('Incorrect Security Code. Please try again.');
-      return;
-    }
-    setCaptchaError('');
-
-    const targetUser: AuthUser = {
-      ...DEFAULT_PERSONAS.command_center,
-      email: officialUsername || 'officer@gov.in',
-      loginTime: new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
-
-    triggerLoginSuccess(
-      targetUser,
-      'command_center',
-      `Welcome, ${targetUser.name}! Authenticated via Jan Parichay SSO.`
-    );
-  };
-
-  // Handle Citizen OTP Generation
-  const handleSendOtp = () => {
-    if (!consentChecked) {
-      alert('Please agree to Aadhaar e-KYC consent declaration.');
-      return;
-    }
-    setOtpSent(true);
-    setOtpTimer(60);
-  };
-
-  // Handle Citizen Login
-  const handleCitizenSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const targetUser: AuthUser = {
-      ...DEFAULT_PERSONAS.citizen,
-      loginTime: new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
-
-    triggerLoginSuccess(
-      targetUser,
-      'citizen',
-      `Welcome, ${targetUser.name}! Land parcel records loaded.`
-    );
-  };
-
-  // Handle DSC Login
-  const handleDscSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const isDistrict = selectedToken === 'emudhra-1';
-    const targetUser = isDistrict ? DEFAULT_PERSONAS.district_officer : DEFAULT_PERSONAS.field_officer;
-
-    triggerLoginSuccess(
-      targetUser,
-      targetUser.role,
-      `Class-3 DSC Token Authenticated. Welcome, ${targetUser.name}!`
-    );
-  };
-
-  // Handle Subtle Quick Access Role Login
+  // Handle Quick Access Role Login
   const handlePersonaLogin = (key: keyof typeof DEFAULT_PERSONAS) => {
     const persona = DEFAULT_PERSONAS[key];
     triggerLoginSuccess(
@@ -277,401 +137,28 @@ export const GovLoginView: React.FC = () => {
               </button>
             </div>
 
-            {/* TAB 1: OFFICIAL SSO FORM */}
+            {/* TAB CONTENT: Delegated to Child Components */}
             {activeTab === 'official' && (
-              <form onSubmit={handleOfficialSubmit} className="p-6 sm:p-8 space-y-5">
-                {/* Username / Employee ID */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                    Official Email / Employee ID / Parichay ID <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      value={officialUsername}
-                      onChange={(e) => setOfficialUsername(e.target.value)}
-                      placeholder="e.g. arun.mehta@nic.in or IAS-MH-1998"
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] focus:border-[#0B3D66] text-slate-900"
-                    />
-                    <span className="absolute right-3 top-2 text-xs text-slate-400 font-mono">@gov.in / @nic.in</span>
-                  </div>
-                </div>
-
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                      Password <span className="text-red-500">*</span>
-                    </label>
-                    <a
-                      href="#forgot-password"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        alert('Password reset instructions sent to registered NIC email/mobile.');
-                      }}
-                      className="text-xs text-[#0B3D66] hover:underline"
-                    >
-                      Forgot Password?
-                    </a>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={officialPassword}
-                      onChange={(e) => setOfficialPassword(e.target.value)}
-                      placeholder="Enter your account password"
-                      className="w-full px-3.5 py-2 pr-10 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] focus:border-[#0B3D66] text-slate-900"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-2 text-slate-400 hover:text-slate-700"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Real Government Styled Compact CAPTCHA */}
-                <div className="bg-slate-50 p-4 rounded border border-slate-200 space-y-2.5">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                    Security Code (CAPTCHA) <span className="text-red-500">*</span>
-                  </label>
-                  
-                  <div className="flex flex-wrap items-center gap-3">
-                    {/* Captcha Box with distortion pattern */}
-                    <div className="px-4 py-1.5 bg-slate-200 border border-slate-300 rounded font-mono text-lg font-black tracking-[0.3em] text-[#0B3D66] select-none shadow-inner relative overflow-hidden">
-                      <div className="absolute inset-0 opacity-15 pointer-events-none bg-[repeating-linear-gradient(45deg,#000_0,#000_2px,transparent_0,transparent_6px)]" />
-                      <span className="relative z-10 italic inline-block">{captchaCode}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={refreshCaptcha}
-                      className="p-2 rounded bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 transition-colors"
-                      title="Refresh Captcha Code"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={speakCaptcha}
-                      className={`p-2 rounded bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 transition-colors ${
-                        isSpeakingCaptcha ? 'text-amber-600 animate-pulse' : ''
-                      }`}
-                      title="Listen to Captcha"
-                    >
-                      <Volume2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    <div className="flex-1 min-w-[130px]">
-                      <input
-                        type="text"
-                        required
-                        value={captchaInput}
-                        onChange={(e) => setCaptchaInput(e.target.value)}
-                        placeholder="Enter code"
-                        className="w-full px-3 py-1.5 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] font-mono font-bold uppercase text-slate-900"
-                      />
-                    </div>
-                  </div>
-
-                  {captchaError && (
-                    <p className="text-xs text-red-600 font-semibold flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> {captchaError}
-                    </p>
-                  )}
-                </div>
-
-                {/* Primary Action Button */}
-                <div className="pt-2 space-y-3">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 shadow-xs transition-colors"
-                  >
-                    <Lock className="w-4 h-4 text-amber-300" />
-                    <span>{isLoading ? 'Verifying Credentials...' : 'Sign In as Officer'}</span>
-                  </button>
-
-                  <div className="flex items-center gap-3 pt-1">
-                    <div className="h-px flex-1 bg-slate-200" />
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase">Or</span>
-                    <div className="h-px flex-1 bg-slate-200" />
-                  </div>
-
-                  {/* MeriPehchan National SSO Option */}
-                  <button
-                    type="button"
-                    onClick={() => handlePersonaLogin('command_center')}
-                    className="w-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 py-2 px-3 rounded text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <Landmark className="w-3.5 h-3.5 text-[#0B3D66]" />
-                    <span>Sign in with MeriPehchan / Jan Parichay SSO</span>
-                  </button>
-                </div>
-              </form>
+              <OfficialLoginTab
+                isLoading={isLoading}
+                onSuccess={triggerLoginSuccess}
+                onPersonaLogin={handlePersonaLogin}
+              />
             )}
 
-            {/* TAB 2: CITIZEN / LANDOWNER FORM */}
             {activeTab === 'citizen' && (
-              <form onSubmit={handleCitizenSubmit} className="p-6 sm:p-8 space-y-5">
-                <div className="flex gap-4 border-b border-slate-200 pb-3 text-xs font-semibold text-slate-700">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="citizenMethod"
-                      checked={citizenMethod === 'aadhaar'}
-                      onChange={() => setCitizenMethod('aadhaar')}
-                      className="text-[#0B3D66] focus:ring-[#0B3D66]"
-                    />
-                    <span>Aadhaar OTP</span>
-                  </label>
-
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="citizenMethod"
-                      checked={citizenMethod === 'mobile'}
-                      onChange={() => setCitizenMethod('mobile')}
-                      className="text-[#0B3D66] focus:ring-[#0B3D66]"
-                    />
-                    <span>Mobile OTP</span>
-                  </label>
-
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="citizenMethod"
-                      checked={citizenMethod === 'caseId'}
-                      onChange={() => setCitizenMethod('caseId')}
-                      className="text-[#0B3D66] focus:ring-[#0B3D66]"
-                    />
-                    <span>Case / Khata ID</span>
-                  </label>
-                </div>
-
-                {citizenMethod === 'aadhaar' && (
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                        12-Digit Aadhaar Number <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          required
-                          value={aadhaarNumber}
-                          onChange={(e) => setAadhaarNumber(e.target.value)}
-                          placeholder="XXXX XXXX XXXX"
-                          className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900"
-                        />
-                        <Fingerprint className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
-                      </div>
-                      <p className="text-[11px] text-slate-500">
-                        OTP will be dispatched to UIDAI registered mobile number.
-                      </p>
-                    </div>
-
-                    <div className="bg-slate-50 p-3 rounded border border-slate-200 text-xs text-slate-600">
-                      <label className="flex items-start gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={consentChecked}
-                          onChange={(e) => setConsentChecked(e.target.checked)}
-                          className="mt-0.5 text-[#0B3D66] rounded"
-                        />
-                        <span>
-                          I consent to identity verification via Aadhaar OTP for accessing land valuation awards and DBT compensation records under RFCTLARR Act 2013.
-                        </span>
-                      </label>
-                    </div>
-
-                    {!otpSent ? (
-                      <button
-                        type="button"
-                        onClick={handleSendOtp}
-                        className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                      >
-                        <Smartphone className="w-4 h-4 text-amber-300" />
-                        <span>Send 6-Digit OTP</span>
-                      </button>
-                    ) : (
-                      <div className="space-y-3 bg-slate-50 p-3.5 rounded border border-slate-200">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-slate-700">Enter OTP sent to XXXX-8921:</span>
-                          <span className="font-mono text-slate-500">
-                            {otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Expired'}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-1.5 max-w-xs mx-auto">
-                          {otpDigits.map((digit, idx) => (
-                            <input
-                              key={idx}
-                              type="text"
-                              maxLength={1}
-                              value={digit}
-                              onChange={(e) => {
-                                const newDigits = [...otpDigits];
-                                newDigits[idx] = e.target.value;
-                                setOtpDigits(newDigits);
-                              }}
-                              className="w-9 h-10 text-center font-mono font-bold bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] text-slate-900"
-                            />
-                          ))}
-                        </div>
-
-                        <div className="flex items-center justify-between text-xs pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setOtpDigits(['1', '2', '3', '4', '5', '6'])}
-                            className="text-[#0B3D66] hover:underline"
-                          >
-                            Auto-fill Demo (123456)
-                          </button>
-                          <button
-                            type="button"
-                            disabled={otpTimer > 0}
-                            onClick={handleSendOtp}
-                            className={`${
-                              otpTimer > 0 ? 'text-slate-400' : 'text-[#0B3D66] hover:underline'
-                            }`}
-                          >
-                            Resend OTP
-                          </button>
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full mt-2 bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-amber-300" />
-                          <span>{isLoading ? 'Verifying...' : 'Verify OTP & View Case Records'}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {citizenMethod === 'mobile' && (
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                        10-Digit Registered Mobile Number <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2 text-xs font-bold text-slate-500">+91</span>
-                        <input
-                          type="tel"
-                          required
-                          value={mobileNumber}
-                          onChange={(e) => setMobileNumber(e.target.value)}
-                          placeholder="98201 44521"
-                          className="w-full pl-12 pr-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handlePersonaLogin('citizen')}
-                      className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <Smartphone className="w-4 h-4 text-amber-300" />
-                      <span>Send Mobile OTP</span>
-                    </button>
-                  </div>
-                )}
-
-                {citizenMethod === 'caseId' && (
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                        Case Reference Number / Khata No. <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={caseIdInput}
-                        onChange={(e) => setCaseIdInput(e.target.value)}
-                        placeholder="e.g. MH-PAL-2024-8821"
-                        className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handlePersonaLogin('citizen')}
-                      className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <FileCheck2 className="w-4 h-4 text-amber-300" />
-                      <span>Search Case &amp; Title Records</span>
-                    </button>
-                  </div>
-                )}
-              </form>
+              <CitizenLoginTab
+                isLoading={isLoading}
+                onSuccess={triggerLoginSuccess}
+                onPersonaLogin={handlePersonaLogin}
+              />
             )}
 
-            {/* TAB 3: DSC TOKEN */}
             {activeTab === 'dsc' && (
-              <form onSubmit={handleDscSubmit} className="p-6 sm:p-8 space-y-5">
-                <div className="bg-slate-50 p-3 rounded border border-slate-200 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>USB Hardware Token: <strong className="text-slate-900">NIC-CRYPTO-PKI-2026</strong></span>
-                  </div>
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    Ready
-                  </span>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                    Digital Certificate <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedToken}
-                    onChange={(e) => setSelectedToken(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] text-slate-900"
-                  >
-                    <option value="emudhra-1">
-                      eMudhra Class 3 (Signing &amp; Encryption) — Dr. Rajeshwar Verma, IAS (CALA Palghar)
-                    </option>
-                    <option value="emudhra-2">
-                      Capricorn Class 3 — S. Murugan (Senior Revenue Surveyor, Div 4)
-                    </option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                    Smart Token User PIN <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      required
-                      value={dscPin}
-                      onChange={(e) => setDscPin(e.target.value)}
-                      placeholder="Enter 6-8 digit PIN"
-                      className="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#0B3D66] font-mono text-slate-900"
-                    />
-                    <KeyRound className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#0B3D66] hover:bg-[#072742] text-white py-2.5 px-4 rounded font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Cpu className="w-4 h-4 text-amber-300" />
-                  <span>{isLoading ? 'Validating Token...' : 'Authenticate Certificate'}</span>
-                </button>
-              </form>
+              <DSCLoginTab
+                isLoading={isLoading}
+                onSuccess={triggerLoginSuccess}
+              />
             )}
 
             {/* Subtle Footer Trust Badges (NIC / CERT-In / SHA-256) */}
@@ -682,7 +169,6 @@ export const GovLoginView: React.FC = () => {
               <span>TLS 1.3 Encryption Active</span>
             </div>
           </div>
-
 
           {/* ========================================================================= */}
           {/* RIGHT 5 COLS: Quick Access Stakeholder Portals & Helpdesk (Subtle Tone)  */}

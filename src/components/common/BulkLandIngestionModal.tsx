@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   UploadCloud,
   X,
@@ -12,13 +12,13 @@ import {
 } from 'lucide-react';
 
 export const BulkLandIngestionModal: React.FC = () => {
-  const { bulkUploadOpen, setBulkUploadOpen } = useRole();
+  const { isModalOpen, closeModal } = useModals();
 
   const [fileName, setFileName] = useState<string | null>('Palghar_Vevoor_Survey_Batches_Aug2026.xlsx');
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  if (!bulkUploadOpen) return null;
+  if (!isModalOpen('bulkUpload')) return null;
 
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +47,7 @@ export const BulkLandIngestionModal: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setBulkUploadOpen(false)}
+            onClick={() => closeModal('bulkUpload')}
             className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -87,7 +87,7 @@ export const BulkLandIngestionModal: React.FC = () => {
               <button
                 onClick={() => {
                   setUploadSuccess(false);
-                  setBulkUploadOpen(false);
+                  closeModal('bulkUpload');
                 }}
                 className="px-5 py-2 bg-[#0B3D66] text-white text-xs font-bold rounded-lg"
               >
@@ -157,7 +157,7 @@ export const BulkLandIngestionModal: React.FC = () => {
         <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
           <span>Digital India Land Records Modernisation Programme (DILRMP) Gateway</span>
           <button
-            onClick={() => setBulkUploadOpen(false)}
+            onClick={() => closeModal('bulkUpload')}
             className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded"
           >
             Cancel

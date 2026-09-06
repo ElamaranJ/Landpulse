@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   FileCheck2,
   X,
@@ -15,12 +16,13 @@ import {
 import confetti from 'canvas-confetti';
 
 export const DigitalAwardSheetModal: React.FC = () => {
-  const { digitalAwardOpen, setDigitalAwardOpen, currentUser } = useRole();
+  const { currentUser } = useRole();
+  const { isModalOpen, closeModal } = useModals();
 
   const [isSigned, setIsSigned] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
 
-  if (!digitalAwardOpen) return null;
+  if (!isModalOpen('digitalAward')) return null;
 
   const handleSignWithDSC = () => {
     setIsSigning(true);
@@ -55,7 +57,7 @@ export const DigitalAwardSheetModal: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setDigitalAwardOpen(false)}
+            onClick={() => closeModal('digitalAward')}
             className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -234,7 +236,7 @@ export const DigitalAwardSheetModal: React.FC = () => {
               <Download className="w-3.5 h-3.5 text-[#0B3D66]" /> Download PDF
             </button>
             <button
-              onClick={() => setDigitalAwardOpen(false)}
+              onClick={() => closeModal('digitalAward')}
               className="px-4 py-1.5 bg-[#0B3D66] text-white text-xs font-bold rounded"
             >
               Close

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   Search,
   X,
@@ -17,12 +17,12 @@ import {
 } from 'lucide-react';
 
 export const CaseTrackerModal: React.FC = () => {
-  const { caseTrackerOpen, setCaseTrackerOpen, setGrievanceModalOpen, setCalcModalOpen } = useRole();
+  const { isModalOpen, closeModal, openModal } = useModals();
 
   const [searchQuery, setSearchQuery] = useState('MH-PAL-2024-8821');
   const [hasSearched, setHasSearched] = useState(true);
 
-  if (!caseTrackerOpen) return null;
+  if (!isModalOpen('caseTracker')) return null;
 
   // Mock Case Record
   const caseData = {
@@ -108,7 +108,7 @@ export const CaseTrackerModal: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setCaseTrackerOpen(false)}
+            onClick={() => closeModal('caseTracker')}
             className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -232,8 +232,8 @@ export const CaseTrackerModal: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                setCaseTrackerOpen(false);
-                setGrievanceModalOpen(true);
+                closeModal('caseTracker');
+                openModal('grievance');
               }}
               className="text-xs text-[#0B3D66] font-bold hover:underline"
             >
@@ -242,8 +242,8 @@ export const CaseTrackerModal: React.FC = () => {
             <span className="text-slate-300">•</span>
             <button
               onClick={() => {
-                setCaseTrackerOpen(false);
-                setCalcModalOpen(true);
+                closeModal('caseTracker');
+                openModal('calc');
               }}
               className="text-xs text-[#0B3D66] font-bold hover:underline"
             >
@@ -259,7 +259,7 @@ export const CaseTrackerModal: React.FC = () => {
               <Download className="w-3.5 h-3.5" /> Download Case Receipt
             </button>
             <button
-              onClick={() => setCaseTrackerOpen(false)}
+              onClick={() => closeModal('caseTracker')}
               className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded"
             >
               Close

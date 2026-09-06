@@ -11,8 +11,8 @@ export const CitizenDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <CaseOverviewCard onOpenObjectionModal={() => setIsObjectionModalOpen(true)} />
-      <TimelineStepper stages={MOCK_CITIZEN_CASE.stages} currentStageIndex={MOCK_CITIZEN_CASE.currentStageIndex} />
-      <DocumentVault documents={MOCK_CITIZEN_CASE.documents} />
+      <TimelineStepper stages={MOCK_CITIZEN_CASE.stages || []} currentStageIndex={MOCK_CITIZEN_CASE.currentStageIndex ?? 0} />
+      <DocumentVault documents={MOCK_CITIZEN_CASE.documents || []} />
       <ObjectionModal isOpen={isObjectionModalOpen} onClose={() => setIsObjectionModalOpen(false)} />
     </div>
   );

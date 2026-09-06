@@ -4,11 +4,13 @@ export type RoleType =
   | 'command_center' 
   | 'citizen' 
   | 'field_officer' 
+  | 'officer_inspections'
   | 'district_officer' 
   | 'intelligence_layer'
   | 'acts'
   | 'rti'
   | 'whoswho';
+
 
 export interface AuthUser {
   id: string;
@@ -99,26 +101,36 @@ export interface CaseObjection {
 }
 
 export interface CitizenCase {
-  caseId: string;
-  surveyNumber: string;
-  khataNumber: string;
-  landownerName: string;
-  aadhaarMasked: string;
-  village: string;
-  taluk: string;
-  district: string;
-  state: string;
-  landAreaAcre: number;
-  landType: 'Agricultural' | 'Commercial' | 'Residential' | 'Wetland';
-  projectName: string;
-  projectCode: string;
-  currentStageIndex: number;
-  estimatedValuationCr: number;
-  awardedCompensationCr: number;
-  disbursedCompensationCr: number;
-  stages: StageMilestone[];
-  documents: CaseDocument[];
-  objections: CaseObjection[];
+  caseId?: string;
+  id?: string;
+  surveyNumber?: string;
+  surveyNo?: string;
+  khataNumber?: string;
+  landownerName?: string;
+  owner?: string;
+  aadhaarMasked?: string;
+  village?: string;
+  taluk?: string;
+  district?: string;
+  state?: string;
+  landAreaAcre?: number;
+  area?: string;
+  landType?: 'Agricultural' | 'Commercial' | 'Residential' | 'Wetland' | string;
+  category?: string;
+  projectName?: string;
+  projectCode?: string;
+  currentStageIndex?: number;
+  stage?: string;
+  status?: string;
+  estimatedValuationCr?: number;
+  awardedCompensationCr?: number;
+  disbursedCompensationCr?: number;
+  amountCr?: string;
+  actionRequired?: string;
+  priority?: string;
+  stages?: StageMilestone[];
+  documents?: CaseDocument[];
+  objections?: CaseObjection[];
 }
 
 export interface PhotoEvidence {
@@ -170,6 +182,7 @@ export interface CriticalAlert {
   impactValuationCr: number;
   suggestedAction: string;
   timestamp: string;
+  isRead?: boolean;
 }
 
 export interface RiskEngineItem {
@@ -189,3 +202,6 @@ export interface RiskEngineItem {
   recommendedIntervention: string;
   actionStatus: 'PENDING' | 'INTERVENED' | 'ESCALATED';
 }
+
+export * from './parcel';
+

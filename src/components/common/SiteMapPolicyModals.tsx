@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   Map,
   X,
@@ -10,21 +11,11 @@ import {
 } from 'lucide-react';
 
 export const SiteMapPolicyModals: React.FC = () => {
-  const {
-    siteMapOpen,
-    setSiteMapOpen,
-    privacyPolicyOpen,
-    setPrivacyPolicyOpen,
-    setCurrentRole,
-    setCalcModalOpen,
-    setCaseTrackerOpen,
-    setGrievanceModalOpen,
-    setNotificationSearchOpen,
-    setDgpsViewerOpen,
-    setDigitalAwardOpen,
-    setBulkUploadOpen,
-    setOpenDataOpen,
-  } = useRole();
+  const { setCurrentRole } = useRole();
+  const { isModalOpen, closeModal, openModal } = useModals();
+
+  const siteMapOpen = isModalOpen('siteMap');
+  const privacyPolicyOpen = isModalOpen('privacyPolicy');
 
   if (!siteMapOpen && !privacyPolicyOpen) return null;
 
@@ -47,7 +38,7 @@ export const SiteMapPolicyModals: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={() => setSiteMapOpen(false)}
+                onClick={() => closeModal('siteMap')}
                 className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -63,27 +54,27 @@ export const SiteMapPolicyModals: React.FC = () => {
                 </h3>
                 <ul className="space-y-1.5 text-slate-700">
                   <li>
-                    <button onClick={() => { setCurrentRole('home'); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { setCurrentRole('home'); closeModal('siteMap'); }} className="hover:text-blue-700 hover:underline">
                       • Government Portal Home
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setCurrentRole('acts'); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { setCurrentRole('acts'); closeModal('siteMap'); }} className="hover:text-blue-700 hover:underline">
                       • Acts, Rules &amp; Policies (RFCTLARR)
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setCurrentRole('whoswho'); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { setCurrentRole('whoswho'); closeModal('siteMap'); }} className="hover:text-blue-700 hover:underline">
                       • Who's Who (Officer Directory)
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setCurrentRole('rti'); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { setCurrentRole('rti'); closeModal('siteMap'); }} className="hover:text-blue-700 hover:underline">
                       • Citizen Charter &amp; RTI Online
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setCurrentRole('login'); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline font-bold text-blue-800">
+                    <button onClick={() => { setCurrentRole('login'); closeModal('siteMap'); }} className="hover:text-blue-700 hover:underline font-bold text-blue-800">
                       • Single Sign-On Gateway (Parichay/SSO)
                     </button>
                   </li>
@@ -97,27 +88,27 @@ export const SiteMapPolicyModals: React.FC = () => {
                 </h3>
                 <ul className="space-y-1.5 text-slate-700">
                   <li>
-                    <button onClick={() => { setCaseTrackerOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline font-semibold">
+                    <button onClick={() => { closeModal('siteMap'); openModal('caseTracker'); }} className="hover:text-blue-700 hover:underline font-semibold">
                       • Track Land Case Status
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setCalcModalOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline font-semibold">
+                    <button onClick={() => { closeModal('siteMap'); openModal('calc'); }} className="hover:text-blue-700 hover:underline font-semibold">
                       • RFCTLARR Compensation Calculator
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setGrievanceModalOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline font-semibold">
+                    <button onClick={() => { closeModal('siteMap'); openModal('grievance'); }} className="hover:text-blue-700 hover:underline font-semibold">
                       • Lodge Section 15 Objection (CPGRAMS)
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setNotificationSearchOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { closeModal('siteMap'); openModal('notificationSearch'); }} className="hover:text-blue-700 hover:underline">
                       • Gazette Notifications Search
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setCurrentRole('citizen'); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { setCurrentRole('citizen'); closeModal('siteMap'); }} className="hover:text-blue-700 hover:underline">
                       • Citizen Corner &amp; Document Vault
                     </button>
                   </li>
@@ -131,27 +122,27 @@ export const SiteMapPolicyModals: React.FC = () => {
                 </h3>
                 <ul className="space-y-1.5 text-slate-700">
                   <li>
-                    <button onClick={() => { setCurrentRole('command_center'); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { setCurrentRole('command_center'); closeModal('siteMap'); }} className="hover:text-blue-700 hover:underline">
                       • National Command Center (MoRD)
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setDgpsViewerOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { closeModal('siteMap'); openModal('dgpsViewer'); }} className="hover:text-blue-700 hover:underline">
                       • NavIC DGPS Cadastral Viewer
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setDigitalAwardOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { closeModal('siteMap'); openModal('digitalAward'); }} className="hover:text-blue-700 hover:underline">
                       • Digital Form 7 Award Sheet &amp; DSC
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setBulkUploadOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline">
+                    <button onClick={() => { closeModal('siteMap'); openModal('bulkUpload'); }} className="hover:text-blue-700 hover:underline">
                       • Patwari Bulk Data Ingestion
                     </button>
                   </li>
                   <li>
-                    <button onClick={() => { setOpenDataOpen(true); setSiteMapOpen(false); }} className="hover:text-blue-700 hover:underline font-bold text-blue-800">
+                    <button onClick={() => { closeModal('siteMap'); openModal('openData'); }} className="hover:text-blue-700 hover:underline font-bold text-blue-800">
                       • Open Data API &amp; Datasets
                     </button>
                   </li>
@@ -162,7 +153,7 @@ export const SiteMapPolicyModals: React.FC = () => {
 
             <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
               <button
-                onClick={() => setSiteMapOpen(false)}
+                onClick={() => closeModal('siteMap')}
                 className="px-4 py-1.5 bg-[#0B3D66] text-white text-xs font-bold rounded"
               >
                 Close Site Map
@@ -189,7 +180,7 @@ export const SiteMapPolicyModals: React.FC = () => {
                 </div>
               </div>
               <button
-                onClick={() => setPrivacyPolicyOpen(false)}
+                onClick={() => closeModal('privacyPolicy')}
                 className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg"
               >
                 <X className="w-5 h-5" />
@@ -220,7 +211,7 @@ export const SiteMapPolicyModals: React.FC = () => {
 
             <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
               <button
-                onClick={() => setPrivacyPolicyOpen(false)}
+                onClick={() => closeModal('privacyPolicy')}
                 className="px-4 py-1.5 bg-[#0B3D66] text-white text-xs font-bold rounded"
               >
                 Accept &amp; Close

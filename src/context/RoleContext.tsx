@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
-import { RoleType, Project, AuthUser } from '../types';
-import { MOCK_PROJECTS } from '../data/mockData';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { RoleType, Project, AuthUser, CriticalAlert } from '../types';
+import { MOCK_PROJECTS, MOCK_CRITICAL_ALERTS } from '../data/mockData';
 
 export const DEFAULT_PERSONAS: Record<string, AuthUser> = {
   command_center: {
@@ -70,90 +71,206 @@ export const DEFAULT_PERSONAS: Record<string, AuthUser> = {
   },
 };
 
-interface RoleContextType {
+export const ROLE_TO_PATH: Record<RoleType, string> = {
+  home: '/',
+  login: '/login',
+  command_center: '/command-center',
+  citizen: '/citizen',
+  field_officer: '/field-officer',
+  officer_inspections: '/officer/inspections',
+  district_officer: '/district-officer',
+  intelligence_layer: '/intelligence',
+  acts: '/acts',
+  rti: '/rti',
+  whoswho: '/whoswho',
+};
+
+export const PATH_TO_ROLE: Record<string, RoleType> = {
+  '/': 'home',
+  '/login': 'login',
+  '/command-center': 'command_center',
+  '/citizen': 'citizen',
+  '/field-officer': 'field_officer',
+  '/officer/inspections': 'officer_inspections',
+  '/field-officer/inspections': 'officer_inspections',
+  '/district-officer': 'district_officer',
+  '/intelligence': 'intelligence_layer',
+  '/acts': 'acts',
+  '/rti': 'rti',
+  '/whoswho': 'whoswho',
+};
+
+
+const USER_STORAGE_KEY = 'landpulse_current_user';
+const ROLE_STORAGE_KEY = 'landpulse_current_role';
+const LANG_STORAGE_KEY = 'landpulse_selected_language';
+const ALERTS_STORAGE_KEY = 'landpulse_alerts';
+
+const getInitialUser = (): AuthUser | null => {
+  try {
+    const saved = localStorage.getItem(USER_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object' && parsed.id && parsed.name) {
+        return parsed as AuthUser;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load user from localStorage:', err);
+  }
+  return DEFAULT_PERSONAS.command_center;
+};
+
+const getInitialRole = (): RoleType => {
+  try {
+    const saved = localStorage.getItem(ROLE_STORAGE_KEY);
+    if (saved && Object.prototype.hasOwnProperty.call(ROLE_TO_PATH, saved)) {
+      return saved as RoleType;
+    }
+  } catch (err) {
+    console.warn('Failed to load role from localStorage:', err);
+  }
+  return 'command_center';
+};
+
+const getInitialLanguage = (): string => {
+  try {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved) {
+      return saved;
+    }
+  } catch (err) {
+    console.warn('Failed to load language from localStorage:', err);
+  }
+  return 'EN';
+};
+
+const getInitialAlerts = (): CriticalAlert[] => {
+  try {
+    const saved = localStorage.getItem(ALERTS_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed as CriticalAlert[];
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load alerts from localStorage:', err);
+  }
+  return MOCK_CRITICAL_ALERTS.map((a) => ({ ...a, isRead: false }));
+};
+
+export interface RoleContextType {
   currentRole: RoleType;
   setCurrentRole: (role: RoleType) => void;
   selectedState: string | null;
   setSelectedState: (stateId: string | null) => void;
   selectedProject: Project | null;
   setSelectedProject: (project: Project | null) => void;
-  commandPaletteOpen: boolean;
-  setCommandPaletteOpen: (open: boolean) => void;
-  exportModalOpen: boolean;
-  setExportModalOpen: (open: boolean) => void;
-  unreadAlertsCount: number;
-  setUnreadAlertsCount: React.Dispatch<React.SetStateAction<number>>;
-  notificationsOpen: boolean;
-  setNotificationsOpen: (open: boolean) => void;
   currentUser: AuthUser | null;
   loginUser: (user: AuthUser, redirectRole?: RoleType) => void;
   logoutUser: () => void;
-  
-  // Interactive Modals
-  calcModalOpen: boolean;
-  setCalcModalOpen: (open: boolean) => void;
-  caseTrackerOpen: boolean;
-  setCaseTrackerOpen: (open: boolean) => void;
-  grievanceModalOpen: boolean;
-  setGrievanceModalOpen: (open: boolean) => void;
-  notificationSearchOpen: boolean;
-  setNotificationSearchOpen: (open: boolean) => void;
-  dgpsViewerOpen: boolean;
-  setDgpsViewerOpen: (open: boolean) => void;
-  digitalAwardOpen: boolean;
-  setDigitalAwardOpen: (open: boolean) => void;
-  bulkUploadOpen: boolean;
-  setBulkUploadOpen: (open: boolean) => void;
-  openDataOpen: boolean;
-  setOpenDataOpen: (open: boolean) => void;
-  siteMapOpen: boolean;
-  setSiteMapOpen: (open: boolean) => void;
-  privacyPolicyOpen: boolean;
-  setPrivacyPolicyOpen: (open: boolean) => void;
-  
-  // Language
-  selectedLanguage: 'EN' | 'HI' | 'MR' | 'TA' | 'GU' | 'TE' | 'BN';
-  setSelectedLanguage: (lang: 'EN' | 'HI' | 'MR' | 'TA' | 'GU' | 'TE' | 'BN') => void;
+  alerts: CriticalAlert[];
+  unreadAlertsCount: number;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  selectedLanguage: string;
+  setSelectedLanguage: (lang: string) => void;
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentRole, setCurrentRole] = useState<RoleType>('command_center');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const currentRole = PATH_TO_ROLE[location.pathname] || getInitialRole();
   const [selectedState, setSelectedState] = useState<string | null>('ST-MH');
   const [selectedProject, setSelectedProject] = useState<Project | null>(MOCK_PROJECTS[0]);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [unreadAlertsCount, setUnreadAlertsCount] = useState(4);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(DEFAULT_PERSONAS.command_center);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(getInitialUser);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(getInitialLanguage);
+  const [alerts, setAlerts] = useState<CriticalAlert[]>(getInitialAlerts);
 
-  // New Modals State
-  const [calcModalOpen, setCalcModalOpen] = useState(false);
-  const [caseTrackerOpen, setCaseTrackerOpen] = useState(false);
-  const [grievanceModalOpen, setGrievanceModalOpen] = useState(false);
-  const [notificationSearchOpen, setNotificationSearchOpen] = useState(false);
-  const [dgpsViewerOpen, setDgpsViewerOpen] = useState(false);
-  const [digitalAwardOpen, setDigitalAwardOpen] = useState(false);
-  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
-  const [openDataOpen, setOpenDataOpen] = useState(false);
-  const [siteMapOpen, setSiteMapOpen] = useState(false);
-  const [privacyPolicyOpen, setPrivacyPolicyOpen] = useState(false);
+  // Derive unread alerts count dynamically from the shared alert list
+  const unreadAlertsCount = useMemo(() => {
+    return alerts.filter((a) => !a.isRead).length;
+  }, [alerts]);
 
-  // Language
-  const [selectedLanguage, setSelectedLanguage] = useState<'EN' | 'HI' | 'MR' | 'TA' | 'GU' | 'TE' | 'BN'>('EN');
+  const markAsRead = (id: string) => {
+    setAlerts((prev) =>
+      prev.map((alert) => (alert.id === id ? { ...alert, isRead: true } : alert))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setAlerts((prev) => prev.map((alert) => ({ ...alert, isRead: true })));
+  };
+
+  // Persist alerts to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(ALERTS_STORAGE_KEY, JSON.stringify(alerts));
+    } catch (err) {
+      console.warn('Failed to save alerts to localStorage:', err);
+    }
+  }, [alerts]);
+
+  // Persist user changes to localStorage
+  useEffect(() => {
+    try {
+      if (currentUser) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem(USER_STORAGE_KEY);
+      }
+    } catch (err) {
+      console.warn('Failed to save user to localStorage:', err);
+    }
+  }, [currentUser]);
+
+  // Persist role changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(ROLE_STORAGE_KEY, currentRole);
+    } catch (err) {
+      console.warn('Failed to save role to localStorage:', err);
+    }
+  }, [currentRole]);
+
+  // Persist language changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(LANG_STORAGE_KEY, selectedLanguage);
+    } catch (err) {
+      console.warn('Failed to save language to localStorage:', err);
+    }
+  }, [selectedLanguage]);
+
+  const setCurrentRole = (role: RoleType) => {
+    const targetPath = ROLE_TO_PATH[role] || '/';
+    try {
+      localStorage.setItem(ROLE_STORAGE_KEY, role);
+    } catch (err) {
+      console.warn('Failed to save role to localStorage:', err);
+    }
+    if (location.pathname !== targetPath) {
+      navigate(targetPath);
+    }
+  };
 
   const loginUser = (user: AuthUser, redirectRole?: RoleType) => {
     setCurrentUser(user);
-    if (redirectRole) {
-      setCurrentRole(redirectRole);
-    } else if (user.role) {
-      setCurrentRole(user.role);
-    }
+    const targetRole = redirectRole || user.role || 'command_center';
+    setCurrentRole(targetRole);
   };
 
   const logoutUser = () => {
     setCurrentUser(null);
+    try {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    } catch (err) {
+      console.warn('Failed to remove user from localStorage:', err);
+    }
     setCurrentRole('login');
   };
 
@@ -166,37 +283,13 @@ export const RoleProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSelectedState,
         selectedProject,
         setSelectedProject,
-        commandPaletteOpen,
-        setCommandPaletteOpen,
-        exportModalOpen,
-        setExportModalOpen,
-        unreadAlertsCount,
-        setUnreadAlertsCount,
-        notificationsOpen,
-        setNotificationsOpen,
         currentUser,
         loginUser,
         logoutUser,
-        calcModalOpen,
-        setCalcModalOpen,
-        caseTrackerOpen,
-        setCaseTrackerOpen,
-        grievanceModalOpen,
-        setGrievanceModalOpen,
-        notificationSearchOpen,
-        setNotificationSearchOpen,
-        dgpsViewerOpen,
-        setDgpsViewerOpen,
-        digitalAwardOpen,
-        setDigitalAwardOpen,
-        bulkUploadOpen,
-        setBulkUploadOpen,
-        openDataOpen,
-        setOpenDataOpen,
-        siteMapOpen,
-        setSiteMapOpen,
-        privacyPolicyOpen,
-        setPrivacyPolicyOpen,
+        alerts,
+        unreadAlertsCount,
+        markAsRead,
+        markAllAsRead,
         selectedLanguage,
         setSelectedLanguage,
       }}

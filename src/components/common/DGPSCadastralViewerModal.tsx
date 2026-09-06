@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   Compass,
   X,
@@ -17,12 +17,12 @@ import {
 } from 'lucide-react';
 
 export const DGPSCadastralViewerModal: React.FC = () => {
-  const { dgpsViewerOpen, setDgpsViewerOpen } = useRole();
+  const { isModalOpen, closeModal } = useModals();
 
   const [activeLayer, setActiveLayer] = useState<'cadastral' | 'satellite' | 'hybrid'>('cadastral');
   const [selectedPoint, setSelectedPoint] = useState<number | null>(1);
 
-  if (!dgpsViewerOpen) return null;
+  if (!isModalOpen('dgpsViewer')) return null;
 
   // Boundary coordinates & Geo-tagged pins
   const boundaryPoints = [
@@ -50,7 +50,7 @@ export const DGPSCadastralViewerModal: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setDgpsViewerOpen(false)}
+            onClick={() => closeModal('dgpsViewer')}
             className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -242,7 +242,7 @@ export const DGPSCadastralViewerModal: React.FC = () => {
         <div className="bg-slate-100 px-6 py-3 border-t border-slate-200 flex items-center justify-between">
           <span className="text-xs text-slate-500 font-mono">Survey of India Datum: EPSG 4326 / WGS84</span>
           <button
-            onClick={() => setDgpsViewerOpen(false)}
+            onClick={() => closeModal('dgpsViewer')}
             className="px-4 py-1.5 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded"
           >
             Close Viewer

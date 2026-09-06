@@ -1,18 +1,11 @@
 import React from 'react';
 import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import { ExternalLink, Phone, Mail, MapPin, Map } from 'lucide-react';
 
 export const GovFooter: React.FC = () => {
-  const {
-    setCurrentRole,
-    setCalcModalOpen,
-    setCaseTrackerOpen,
-    setGrievanceModalOpen,
-    setNotificationSearchOpen,
-    setOpenDataOpen,
-    setSiteMapOpen,
-    setPrivacyPolicyOpen,
-  } = useRole();
+  const { setCurrentRole } = useRole();
+  const { openModal } = useModals();
 
   return (
     <footer className="w-full bg-[#0B3D66] text-white border-t-4 border-[#D97706] mt-12 select-none font-sans">
@@ -42,12 +35,12 @@ export const GovFooter: React.FC = () => {
                 </button>
               </li>
               <li>
-                <button onClick={() => setOpenDataOpen(true)} className="hover:text-white hover:underline text-left font-bold text-amber-300">
+                <button onClick={() => openModal('openData')} className="hover:text-white hover:underline text-left font-bold text-amber-300">
                   Open Data Portal &amp; REST API
                 </button>
               </li>
               <li>
-                <button onClick={() => setSiteMapOpen(true)} className="hover:text-white hover:underline text-left flex items-center gap-1">
+                <button onClick={() => openModal('siteMap')} className="hover:text-white hover:underline text-left flex items-center gap-1">
                   <Map className="w-3 h-3 text-amber-300" /> Portal Site Map (GIGW)
                 </button>
               </li>
@@ -66,12 +59,12 @@ export const GovFooter: React.FC = () => {
                 </button>
               </li>
               <li>
-                <button onClick={() => setNotificationSearchOpen(true)} className="hover:text-white hover:underline text-left">
+                <button onClick={() => openModal('notificationSearch')} className="hover:text-white hover:underline text-left">
                   Gazette Extra-Ordinary Search
                 </button>
               </li>
               <li>
-                <button onClick={() => setCalcModalOpen(true)} className="hover:text-white hover:underline text-left font-semibold text-white">
+                <button onClick={() => openModal('calc')} className="hover:text-white hover:underline text-left font-semibold text-white">
                   Solatium &amp; Multiplier Guidelines
                 </button>
               </li>
@@ -95,17 +88,17 @@ export const GovFooter: React.FC = () => {
             </h4>
             <ul className="space-y-2 text-slate-300">
               <li>
-                <button onClick={() => setCaseTrackerOpen(true)} className="hover:text-white hover:underline text-left font-bold text-amber-300">
+                <button onClick={() => openModal('caseTracker')} className="hover:text-white hover:underline text-left font-bold text-amber-300">
                   Track Land Case Status
                 </button>
               </li>
               <li>
-                <button onClick={() => setCalcModalOpen(true)} className="hover:text-white hover:underline text-left font-bold text-amber-300">
+                <button onClick={() => openModal('calc')} className="hover:text-white hover:underline text-left font-bold text-amber-300">
                   Statutory Compensation Calculator
                 </button>
               </li>
               <li>
-                <button onClick={() => setGrievanceModalOpen(true)} className="hover:text-white hover:underline text-left font-semibold text-white">
+                <button onClick={() => openModal('grievance')} className="hover:text-white hover:underline text-left font-semibold text-white">
                   Lodge Section 15 Objection (CPGRAMS)
                 </button>
               </li>
@@ -212,15 +205,15 @@ export const GovFooter: React.FC = () => {
 
           {/* Right: GIGW Metadata, Visitor Counter, Resolution Note */}
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 text-[11px] font-medium text-slate-300">
-            <button onClick={() => setPrivacyPolicyOpen(true)} className="hover:underline hover:text-white">
+            <button onClick={() => openModal('privacyPolicy')} className="hover:underline hover:text-white">
               Privacy Policy
             </button>
             <span>•</span>
-            <button onClick={() => setPrivacyPolicyOpen(true)} className="hover:underline hover:text-white">
+            <button onClick={() => openModal('privacyPolicy')} className="hover:underline hover:text-white">
               Terms of Use
             </button>
             <span>•</span>
-            <button onClick={() => setSiteMapOpen(true)} className="hover:underline hover:text-white">
+            <button onClick={() => openModal('siteMap')} className="hover:underline hover:text-white">
               Site Map
             </button>
             <span>|</span>

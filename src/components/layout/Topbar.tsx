@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import { useTheme } from '../../context/ThemeContext';
 import type { RoleType } from '../../types';
 import { BrutalistBadge } from '../common/BrutalistBadge';
@@ -19,12 +20,9 @@ export const Topbar: React.FC = () => {
   const {
     currentRole,
     setCurrentRole,
-    setCommandPaletteOpen,
-    setExportModalOpen,
     unreadAlertsCount,
-    setNotificationsOpen,
-    notificationsOpen,
   } = useRole();
+  const { openModal, toggleModal } = useModals();
   const { theme, toggleTheme } = useTheme();
 
   const roleConfigs: { id: RoleType; label: string; code: string }[] = [
@@ -107,7 +105,7 @@ export const Topbar: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0">
           {/* Quick Search */}
           <button
-            onClick={() => setCommandPaletteOpen(true)}
+            onClick={() => openModal('commandPalette')}
             className="flex items-center gap-2 px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-xs transition-colors"
           >
             <Search className="w-3.5 h-3.5 text-slate-400" />
@@ -119,7 +117,7 @@ export const Topbar: React.FC = () => {
 
           {/* Notifications */}
           <button
-            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            onClick={() => toggleModal('notifications')}
             className="relative p-1.5 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition-colors"
             title="Critical Escalation Alerts"
           >
@@ -146,7 +144,7 @@ export const Topbar: React.FC = () => {
 
           {/* Export Briefing Action */}
           <button
-            onClick={() => setExportModalOpen(true)}
+            onClick={() => openModal('exportModal')}
             className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-slate-100 font-mono text-xs font-semibold border border-white/20 transition-colors"
           >
             <Download className="w-3.5 h-3.5 text-orange-400" />

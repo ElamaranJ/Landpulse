@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useRole } from '../../../context/RoleContext';
+import { useModals } from '../../../context/ModalContext';
 import { RefreshCw, Download, Filter, SlidersHorizontal } from 'lucide-react';
 import { MOCK_STATES } from '../../../data/mockData';
 
 export const HeroSection: React.FC = () => {
-  const { selectedState, setSelectedState, setExportModalOpen } = useRole();
+  const { selectedState, setSelectedState } = useRole();
+  const { openModal } = useModals();
   const [selectedMinistry, setSelectedMinistry] = useState('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -43,7 +45,7 @@ export const HeroSection: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setExportModalOpen(true)}
+            onClick={() => openModal('exportModal')}
             className="h-11 px-5 rounded-lg bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold flex items-center gap-2 transition-all shadow-xs"
           >
             <Download className="w-4 h-4" />

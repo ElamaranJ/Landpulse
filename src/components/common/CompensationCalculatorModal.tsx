@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRole } from '../../context/RoleContext';
+import { useModals } from '../../context/ModalContext';
 import {
   Calculator,
   X,
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export const CompensationCalculatorModal: React.FC = () => {
-  const { calcModalOpen, setCalcModalOpen } = useRole();
+  const { isModalOpen, closeModal } = useModals();
 
   // Inputs
   const [landArea, setLandArea] = useState<number>(2.5); // in Acres
@@ -26,7 +26,7 @@ export const CompensationCalculatorModal: React.FC = () => {
   const [treesValuation, setTreesValuation] = useState<number>(280000);
   const [monthsElapsed, setMonthsElapsed] = useState<number>(14); // since Sec 4 notification
 
-  if (!calcModalOpen) return null;
+  if (!isModalOpen('calc')) return null;
 
   // Rural Multiplier (First Schedule RFCTLARR 2013)
   const multiplier = locationType === 'rural_far' ? 2.0 : locationType === 'rural_near' ? 1.5 : 1.0;
@@ -86,7 +86,7 @@ export const CompensationCalculatorModal: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setCalcModalOpen(false)}
+            onClick={() => closeModal('calc')}
             className="p-1.5 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -128,7 +128,7 @@ export const CompensationCalculatorModal: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Unit</label>
                   <select
                     value={landUnit}
-                    onChange={(e: any) => setLandUnit(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLandUnit(e.target.value as 'Acre' | 'Hectare' | 'SqMeter')}
                     className="w-full px-3 py-1.5 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66]"
                   >
                     <option value="Acre">Acres</option>
@@ -160,7 +160,7 @@ export const CompensationCalculatorModal: React.FC = () => {
                 </label>
                 <select
                   value={locationType}
-                  onChange={(e: any) => setLocationType(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLocationType(e.target.value as 'rural_far' | 'rural_near' | 'urban')}
                   className="w-full px-3 py-1.5 text-sm bg-white border border-slate-300 rounded focus:ring-2 focus:ring-[#0B3D66] font-medium"
                 >
                   <option value="rural_far">Rural Area (Distance &gt; 30 km from Urban) — 2.00× Multiplier</option>
@@ -289,7 +289,7 @@ export const CompensationCalculatorModal: React.FC = () => {
               <Download className="w-4 h-4" /> Print / Export Calculation Slip
             </button>
             <button
-              onClick={() => setCalcModalOpen(false)}
+              onClick={() => closeModal('calc')}
               className="px-4 py-2 bg-[#0B3D66] hover:bg-[#072742] text-white text-xs font-bold rounded"
             >
               Close
